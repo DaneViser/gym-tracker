@@ -1,0 +1,105 @@
+/* Workout cards: day badge, big day checkbox, exercise rows, sets panel, card footer,
+   edit mode, '+ Add workout' button, empty state. */
+
+.session { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden; }
+.session.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
+.session.done { border-color: var(--ok); }
+.s-head { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; user-select: none; }
+.s-day { width: 50px; flex: none; text-align: center; border-radius: 12px; padding: 6px 0; background: var(--surface-2); line-height: 1.15; }
+.s-day b { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.s-day small { font-size: 12px; color: var(--muted); }
+.session.today .s-day { background: var(--accent); color: #fff; }
+.session.today .s-day small { color: rgba(255,255,255,.85); }
+.session.done .s-day { background: var(--ok); color: #fff; }
+.session.done .s-day small { color: rgba(255,255,255,.85); }
+.s-title { flex: 1; min-width: 0; }
+.s-title h2 { font-size: 16px; margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.s-title p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.chev { color: var(--muted); transition: transform .2s; flex: none; }
+.session.open .chev { transform: rotate(180deg); }
+.s-body { display: none; border-top: 1px solid var(--line); }
+.session.open .s-body { display: block; }
+
+.daycheck { position: relative; flex: none; width: 34px; height: 34px; }
+.daycheck input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.daycheck span { position: absolute; inset: 0; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); display: grid; place-items: center; transition: all .15s; }
+.daycheck input:checked + span { background: var(--ok); border-color: var(--ok); }
+.daycheck span svg { opacity: 0; transform: scale(.6); transition: all .15s; }
+.daycheck input:checked + span svg { opacity: 1; transform: scale(1); }
+.daycheck input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* exercises */
+.exw { border-bottom: 1px solid var(--line); }
+.ex { display: flex; align-items: center; gap: 12px; padding: 13px 14px; min-height: 64px; }
+.exw.checked { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.ex label.main { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
+.ex input[type=checkbox], .chk {
+  appearance: none; -webkit-appearance: none; flex: none; width: 28px; height: 28px; margin: 0;
+  border: 2px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; display: grid; place-items: center; transition: all .12s;
+}
+.ex input[type=checkbox]::after, .chk::after {
+  content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform .12s;
+}
+.ex input[type=checkbox]:checked, .chk:checked { background: var(--accent); border-color: var(--accent); }
+.ex input[type=checkbox]:checked::after, .chk:checked::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
+.ex input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ex .name { font-weight: 600; overflow-wrap: anywhere; }
+.ex .name[data-new]::after { content: attr(data-new); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); margin-left: 6px; vertical-align: 1px; }
+.ex .meta { font-size: 13px; color: var(--muted); }
+.ex .opt { font-style: italic; }
+.exw.checked .name { text-decoration: line-through; text-decoration-color: var(--muted); color: var(--muted); }
+.setbtn {
+  flex: none; width: 76px; min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--text); font-family: inherit; cursor: pointer; padding: 4px 6px; line-height: 1.15; text-align: center;
+}
+.setbtn b { display: block; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.setbtn small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.setbtn.logged { border-color: var(--accent); background: var(--accent-soft); }
+.setbtn.logged small { color: var(--accent); }
+.setbtn.open { outline: 2px solid var(--accent); outline-offset: 0; }
+
+.sets-panel { padding: 2px 14px 14px 54px; }
+.sets-panel .last { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 8px; flex-wrap: wrap; }
+.sets-panel .last span { overflow-wrap: anywhere; }
+.setrow { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.setrow .sn { width: 54px; flex: none; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.setrow .x { color: var(--muted); font-weight: 700; }
+.setrow .numwrap { position: relative; flex: 1; min-width: 0; }
+.setrow input {
+  width: 100%; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+  font-family: inherit; font-size: 16px; font-weight: 700; padding: 0 34px 0 10px; text-align: center; font-variant-numeric: tabular-nums;
+}
+.setrow input::placeholder { color: var(--muted); font-weight: 500; opacity: .75; }
+.setrow input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.setrow .unit { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); font-weight: 600; pointer-events: none; }
+.setrow.filled input { background: var(--surface); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.sets-panel .btnrow { display: flex; gap: 8px; margin-top: 4px; }
+.sets-panel .btnrow .pill { flex: 1; justify-content: center; height: 40px; }
+
+.empty-ex { padding: 18px 14px; color: var(--muted); font-size: 14px; text-align: center; border-bottom: 1px solid var(--line); }
+.s-foot { padding: 10px 14px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.s-foot small { color: var(--muted); font-size: 12.5px; flex: 1 1 180px; }
+.s-foot .acts { display: flex; gap: 8px; align-items: center; }
+
+.edit-head { padding: 14px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+
+.ex-edit { display: flex; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); align-items: flex-start; }
+.ex-edit .fields { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.ex-edit .sub { display: flex; gap: 8px; align-items: center; }
+.ex-edit .sub .txt { flex: 1; min-width: 0; }
+.ex-edit .optlbl { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.ex-edit .optlbl .chk { width: 24px; height: 24px; border-radius: 7px; }
+.ex-edit .ctrls { display: grid; gap: 6px; flex: none; }
+.mini { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: 16px; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.mini:disabled { opacity: .35; cursor: default; }
+.mini.del { color: var(--danger); }
+.edit-foot { padding: 12px 14px 14px; display: grid; gap: 10px; }
+.edit-foot .bottom { display: flex; justify-content: space-between; gap: 10px; }
+
+.add-workout { width: 100%; height: 56px; border-radius: 16px; border: 2px dashed var(--line); background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; margin-bottom: 14px; }
+.add-workout:hover { border-color: var(--accent); color: var(--accent); }
+.empty-state { text-align: center; padding: 28px 16px 18px; color: var(--muted); }
+.empty-state b { color: var(--text); }
+.empty-state > b:first-child { display: block; font-size: 17px; margin-bottom: 4px; }

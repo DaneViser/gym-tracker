@@ -1,0 +1,23 @@
+/* Red LED gym clock in the header. */
+
+/* gym clock: red LED look, always dark in both themes so it stands out */
+header.top > div:first-child { min-width: 0; }
+.hright { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.mclock {
+  position: relative; height: 36px; border-radius: 11px; overflow: hidden; display: grid; place-items: center;
+  background: #0e0303; border: 1px solid rgba(255, 59, 48, .35);
+  box-shadow: 0 0 14px rgba(255, 45, 35, .16), inset 0 0 14px rgba(255, 45, 35, .07);
+}
+.mclock .mt {
+  grid-area: 1 / 1; font-family: "Share Tech Mono", ui-monospace, "Consolas", monospace;
+  color: #ff3b30; font-size: 21px; letter-spacing: .08em; line-height: 1; font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px rgba(255, 50, 40, .85), 0 0 16px rgba(255, 40, 30, .4);
+}
+.mclock .mt.ghost { color: rgba(255, 59, 48, .09); text-shadow: none; } /* unlit LED segments */
+.mclock .ms { font-size: 13px; opacity: .75; letter-spacing: .04em; }
+@media (max-width: 420px) {
+  .mclock { height: 28px; border-radius: 9px; }
+  .mclock .mt { font-size: 16px; }
+  .mclock .ms { font-size: 10px; }
+  .hright { gap: 5px; }
+}

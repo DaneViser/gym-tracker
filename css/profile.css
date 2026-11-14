@@ -1,0 +1,43 @@
+/* Profile sheet: avatar, stats, settings rows, personal records list. */
+
+/* profile */
+.avatar-btn { padding: 0; }
+.avatar-btn span { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 800; }
+.pr-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pr-id h2 { margin: 0; font-size: 21px; overflow-wrap: anywhere; }
+.pr-id small { color: var(--muted); font-size: 13px; }
+.avatar { width: 52px; height: 52px; flex: none; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
+.pr-stats { grid-template-columns: repeat(2, 1fr); }
+.pr-stats .stat b { font-size: 22px; }
+.pr-stats .stat .sub { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+.pr-fun { margin: -4px 0 6px; color: var(--muted); font-size: 13.5px; text-align: center; min-height: 1px; }
+.pr-h { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 22px 0 8px; }
+.pr-list { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.pr-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; min-height: 56px;
+  border-bottom: 1px solid var(--line); width: 100%; background: transparent; color: var(--text); font: inherit; text-align: left;
+}
+.pr-row:last-child { border-bottom: 0; }
+.pr-row > span:first-child { font-weight: 600; }
+.pr-row b { display: block; font-weight: 600; }
+.pr-row small { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; }
+.pr-btn { cursor: pointer; }
+.pr-btn:hover { background: var(--surface-2); }
+.pr-btn.danger b { color: var(--danger); }
+.chev-r { color: var(--muted); font-size: 22px; line-height: 1; }
+.pr-inline { display: flex; gap: 8px; flex: 1; max-width: 260px; }
+.pr-inline .txt { min-width: 0; }
+.pr-inline .pill { height: 44px; }
+.rec { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.rec:last-child { border-bottom: 0; }
+.rec .medal { width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 16px; }
+.rec .rn { flex: 1; min-width: 0; }
+.rec .rn b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.rec .rn small { color: var(--muted); font-size: 12.5px; }
+.rec .rv { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rec .rv small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+.rec-empty { color: var(--muted); font-size: 14px; padding: 6px 2px; }
+@media (max-width: 420px) { .pr-row { flex-wrap: wrap; } .pr-inline { max-width: none; flex-basis: 100%; } }
+
+.pr-inline.bw { max-width: 180px; }
+@media (max-width: 420px) { .pr-inline.bw { max-width: none; } }

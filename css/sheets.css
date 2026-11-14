@@ -1,0 +1,42 @@
+/* Bottom sheets / modals (.modal, .sheet), segmented buttons (.seg), welcome-guide pieces,
+   sheet header (.p-top) and close button (.p-close). */
+
+.modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.55); }
+.modal.show { display: flex; }
+.sheet {
+  background: var(--surface); color: var(--text); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto;
+  border-radius: 22px 22px 0 0; padding: 22px max(20px, env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  animation: up .25s ease;
+}
+@media (min-width: 560px) { .modal { align-items: center; } .sheet { border-radius: 22px; } }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.02em; }
+.sheet p.lead { margin: 0 0 18px; color: var(--muted); }
+.sheet .toprow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.sheet .stepdots { display: flex; gap: 6px; }
+.sheet .stepdots i { width: 22px; height: 5px; border-radius: 99px; background: var(--line); }
+.sheet .stepdots i.on { background: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: 13px; padding: 7px 12px; cursor: pointer; }
+.seg button.on { background: var(--accent); color: #fff; }
+.choice { display: grid; gap: 10px; margin: 6px 0 18px; }
+.choice label { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 2px solid var(--line); border-radius: 14px; cursor: pointer; }
+.choice label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.choice input { margin: 3px 0 0; accent-color: var(--accent); width: 18px; height: 18px; flex: none; }
+.choice b { display: block; }
+.choice small { color: var(--muted); font-size: 13px; }
+.howto { list-style: none; padding: 0; margin: 0 0 20px; display: grid; gap: 12px; }
+.howto li { display: flex; gap: 12px; align-items: flex-start; }
+.howto .ico { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 18px; }
+.howto b { display: block; font-size: 15px; }
+.howto span.d { color: var(--muted); font-size: 13.5px; }
+.howto span.d b { display: inline; font-size: inherit; color: var(--text); }
+.sheet .actions { display: flex; gap: 10px; }
+.sheet .actions .pill { height: 50px; flex: 1; justify-content: center; font-size: 16px; }
+.err { color: var(--danger); font-size: 13px; min-height: 18px; margin-top: 4px; }
+
+.sheet.tall { max-width: 640px; }
+.p-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.p-top h2 { margin: 0; }
+
+.p-close { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 18px; cursor: pointer; flex: none; }
