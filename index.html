@@ -321,7 +321,7 @@
   .ach-prev .medal { margin-left: -10px; box-shadow: 0 0 0 2px var(--surface-2); }
   .ach-prev .medal:first-child { margin-left: 0; }
   .medal.tiny { width: 34px; height: 34px; }
-  .medal.tiny svg { width: 17px; height: 17px; }
+  .medal.tiny > svg { width: 17px; height: 17px; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
   .ach {
     background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px 10px; text-align: center;
@@ -337,15 +337,20 @@
     background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 70%, #000));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 40%, transparent), 0 4px 12px color-mix(in srgb, var(--c) 35%, transparent);
   }
-  .medal svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+  /* "> svg" = only the main icon; the lock badge (.lk) has its own sizes below */
+  .medal > svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
   .medal.locked { --c: #6b6f76; background: var(--surface); color: var(--muted); box-shadow: inset 0 0 0 2px var(--line); }
-  .medal.locked svg { opacity: .55; filter: none; }
+  .medal.locked > svg { opacity: .55; filter: none; }
   .medal .lk { position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); }
-  .medal .lk svg { width: 13px; height: 13px; opacity: 1; }
+  .medal .lk svg { width: 13px; height: 13px; }
   .medal.big { width: 84px; height: 84px; }
-  .medal.big svg { width: 42px; height: 42px; }
+  .medal.big > svg { width: 42px; height: 42px; }
+  .medal.big .lk { width: 30px; height: 30px; right: -2px; bottom: -2px; }
+  .medal.big .lk svg { width: 16px; height: 16px; }
   .medal.small { width: 44px; height: 44px; }
-  .medal.small svg { width: 22px; height: 22px; }
+  .medal.small > svg { width: 22px; height: 22px; }
+  .medal.small .lk, .medal.tiny .lk { width: 18px; height: 18px; right: -4px; bottom: -4px; }
+  .medal.small .lk svg, .medal.tiny .lk svg { width: 11px; height: 11px; }
   .ach-detail { text-align: center; }
   .ach-detail .medal { margin: 0 auto 10px; }
   .ach-detail h2 { margin: 0 0 4px; }
@@ -957,7 +962,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.10";
+  const APP_VERSION = "2026-11-14.11";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
