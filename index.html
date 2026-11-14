@@ -348,6 +348,22 @@
   .ach-detail h2 { margin: 0 0 4px; }
   .ach-detail .ad { color: var(--muted); margin: 0 0 14px; }
   .ach-detail .note2 { background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; margin: 0 0 12px; text-align: left; }
+  .tchip {
+    position: relative; display: inline-flex; align-items: center; gap: 2px; margin: 0 0 14px; padding: 4px 4px 4px 12px;
+    border-radius: 99px; background: var(--accent-soft); color: var(--text); font-size: 13.5px; font-weight: 700;
+  }
+  .tc-i { width: 30px; height: 30px; border-radius: 50%; border: 0; background: transparent; color: var(--accent); display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .tc-i svg { width: 19px; height: 19px; }
+  .tc-i:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tc-tip {
+    position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); z-index: 5;
+    width: max-content; max-width: 240px; padding: 8px 11px; border-radius: 10px; text-align: left;
+    background: var(--text); color: var(--bg); font-size: 12.5px; font-weight: 500; line-height: 1.35;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25); opacity: 0; visibility: hidden; transition: opacity .15s;
+  }
+  .tc-tip::before { content: ""; position: absolute; top: -5px; left: 50%; margin-left: -5px; border: 5px solid transparent; border-top: 0; border-bottom-color: var(--text); }
+  /* mouse: hover · phone: tap (.open) · keyboard: focus */
+  .tchip:hover .tc-tip, .tchip.open .tc-tip, .tchip:has(.tc-i:focus-visible) .tc-tip { opacity: 1; visibility: visible; }
   .tiers { list-style: none; padding: 0; margin: 0; text-align: left; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
   .tiers li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
   .tiers li:last-child { border-bottom: 0; }
@@ -768,7 +784,8 @@
       nowVal: "Now: {v}", needBw: "Add your body weight in Settings (profile) to unlock this one.",
       benchFor: "Strength milestones", benchForHint: "Separate targets for men and women", sexM: "Men", sexF: "Women", sexX: "General",
       bwField: "Body weight", bwHint: "Optional, for the bench vs bodyweight badge", saved: "Saved",
-      benchNote: "Targets for: {s}. Change it under Settings in your profile.",
+      targetsM: "♂ Men's targets", targetsF: "♀ Women's targets", targetsX: "General targets",
+      targetsTip: "Change this in Profile → Settings → Strength milestones.",
       countsAs: "Counts exercises named like: {n}. Assisted, machine and easier variants don't count.",
       achSub: "{a} of {b} unlocked", achFoot: "Tap a badge to see every level and what's left.",
       liftStd: "Levels follow Strength Level's standards (men ~80 kg, women ~60 kg bodyweight): Bronze = Beginner, Silver = Novice, Gold = Intermediate (average lifter), Platinum = Advanced (top 20%), Diamond = Elite (top 5%), Legend = beyond Elite.",
@@ -852,7 +869,8 @@
       nowVal: "Sada: {v}", needBw: "Dodaj telesnu težinu u podešavanjima (profil) da otključaš ovo.",
       benchFor: "Ciljevi snage", benchForHint: "Posebni ciljevi za muškarce i žene", sexM: "Muškarci", sexF: "Žene", sexX: "Opšte",
       bwField: "Telesna težina", bwHint: "Opciono, za dostignuće bench naspram težine", saved: "Sačuvano",
-      benchNote: "Ciljevi za: {s}. Možeš da promeniš u podešavanjima profila.",
+      targetsM: "♂ Ciljevi za muškarce", targetsF: "♀ Ciljevi za žene", targetsX: "Opšti ciljevi",
+      targetsTip: "Menja se u Profil → Podešavanja → Ciljevi snage.",
       countsAs: "Računaju se vežbe sa nazivom kao: {n}. Asistirane, mašinske i lakše varijante se ne računaju.",
       achSub: "Otključano {a} od {b}", achFoot: "Dodirni dostignuće da vidiš sve nivoe i koliko ti je ostalo.",
       liftStd: "Nivoi prate standarde sajta Strength Level (muškarci ~80 kg, žene ~60 kg telesne težine): Bronza = početnik, Srebro = novajlija, Zlato = srednji nivo (prosečan vežbač), Platina = napredni (top 20%), Dijamant = elita (top 5%), Legenda = iznad elite.",
@@ -934,7 +952,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.8";
+  const APP_VERSION = "2026-11-14.9";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -1864,6 +1882,8 @@
   // Everything here is DERIVED from state.weeks / state.program, so old history counts.
   // Only state.achSeen (highest tier already celebrated per badge) is stored, so we know what is new.
   const ICONS = {
+    "info-circle": "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 9h.01 M11 12h1v4h1",
+    "arrow-big-up-lines": "M9 12h-3.586a1 1 0 0 1 -.707 -1.707l6.586 -6.586a1 1 0 0 1 1.414 0l6.586 6.586a1 1 0 0 1 -.707 1.707h-3.586v3h-6v-3z M9 21h6 M9 18h6",
     stopwatch: "M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z M14.5 10.5l-2.5 2.5 M17 8l1 -1 M14 3h-4",
     "arrows-vertical": "M8 7l4 -4l4 4 M8 17l4 4l4 -4 M12 3l0 18",
     "arrow-bar-to-up": "M12 10l0 10 M12 10l4 4 M12 10l-4 4 M4 4l16 0",
@@ -1896,13 +1916,14 @@
   // reps: true = measured by best reps in one set (bodyweight moves), otherwise heaviest weight.
   // Variants that would inflate numbers (incline, split squat, Romanian, assisted, machine…) are excluded.
   const LIFTS = {
-    bench: { inc: /bench|benč|potisak (sa|na) (ravnoj )?klup/i, exc: /incline|decline|kos[aoi]|close.?grip|dip/i },
+    bench: { inc: /bench|benč|potisak (sa|na) (ravnoj )?klup/i, exc: /incline|decline|kos[aoi]|close.?grip|dip|hip|thrust|trast/i },
     squat: { inc: /squat|čučanj|cucanj/i, exc: /split|bugar|bulgar|goblet|hack|jump|skok/i },
     deadlift: { inc: /deadlift|mrtvo dizanje/i, exc: /romanian|rumunsk|rdl|stiff|single.?leg|jednoj nozi/i },
     ohp: { inc: /overhead press|\bohp\b|military press|potisak iznad glave|vojnički potisak/i, exc: /machine|mašin|seated|sedeći|sede/i },
     pullups: { inc: /pull.?ups?|chin.?ups?|zgib/i, exc: /assist|asist|band|gum[ae]|negativ|lat|pulldown|mašin|machine/i, reps: true },
     dips: { inc: /\bdips?\b|propadanj|razboj/i, exc: /bench dip|assist|asist|mašin|machine|klup/i, reps: true },
     farmer: { inc: /farmer|farmersk/i, exc: /^$/ },
+    hipthrust: { inc: /hip.?thrust|hip trast|potisak kuk/i, exc: /machine|mašin|single|jednoj|band|gum[ae]|bridge|most/i },
     plank: { inc: /plank|izdržaj/i, exc: /side|bočn|reverse|obrnut/i, time: true },
     pushups: { inc: /push.?ups?|sklek/i, exc: /knee|kolen|incline|kos[aoi]|wall|zid|assist|asist/i, reps: true }
   };
@@ -1935,6 +1956,7 @@
     dips:     { m: [3, 10, 20, 31, 42, 55],        f: [1, 3, 9, 19, 29, 38],         x: [2, 6, 15, 25, 35, 46] },
     pushups:  { m: [6, 20, 38, 60, 84, 110],       f: [1, 7, 18, 32, 47, 62],        x: [3, 13, 28, 46, 65, 85] },
     farmer:   { m: [10, 20, 35, 57.5, 80, 100],    f: [5, 10, 20, 32.5, 47.5, 60],   x: [7.5, 15, 27.5, 45, 65, 80] },
+    hipthrust: { m: [55, 95, 150, 210, 285, 360],  f: [35, 62.5, 100, 147.5, 200, 250], x: [45, 80, 125, 180, 240, 300] },
     // Plank (seconds, same for everyone): college norms put the median around 80–100 s and the top 25%
     // above ~2 min; Diamond ≈ top 5%, Legend ≈ top 1%.
     plank:    { x: [30, 60, 90, 120, 210, 300] }
@@ -1947,7 +1969,8 @@
     bench: "Bench press", squat: ["Squat, Front squat", "Čučanj, Squat"], deadlift: ["Deadlift, Sumo deadlift", "Mrtvo dizanje, Deadlift"],
     ohp: ["Overhead press, Military press", "Potisak iznad glave, Military press"], pullups: ["Pull-ups, Chin-ups", "Zgibovi, Pull-ups"],
     dips: ["Dips", "Propadanja, Dips"], farmer: ["Farmer's walk / carry", "Farmerski hod, Farmer's walk"],
-    plank: ["Plank (not side plank)", "Plank, Izdržaj (ne bočni plank)"], pushups: ["Push-ups", "Sklekovi, Push-ups"]
+    plank: ["Plank (not side plank)", "Plank, Izdržaj (ne bočni plank)"], pushups: ["Push-ups", "Sklekovi, Push-ups"],
+    hipthrust: ["Hip thrust (barbell; not glute bridge)", "Hip thrust, Potisak kukovima (sa šipkom; ne glute bridge)"]
   };
   const perHandTxt = v => fmtNum(v) + " " + t("kg") + " " + (lang === "sr" ? "po ruci" : "per hand");
 
@@ -1967,6 +1990,7 @@
     { id: "benchBw", icon: "scale", m: "benchBw", tiers: ladder("benchBw"), fmt: ratioTxt, sexNote: true, needsBw: true, title: ["Bench vs bodyweight", "Bench naspram težine"], desc: ["Best bench ÷ your body weight: {n}", "Najbolji bench ÷ tvoja težina: {n}"] },
     { id: "squat", icon: "weight", m: "squat", tiers: ladder("squat"), fmt: kgTxt, plates: true, sexNote: true, title: ["Squat", "Čučanj"], desc: ["Best squat: {n}", "Najbolji čučanj: {n}"] },
     { id: "deadlift", icon: "weight", m: "deadlift", tiers: ladder("deadlift"), fmt: kgTxt, plates: true, sexNote: true, title: ["Deadlift", "Mrtvo dizanje"], desc: ["Best deadlift: {n}", "Najbolje mrtvo dizanje: {n}"] },
+    { id: "hipthrust", icon: "arrow-big-up-lines", m: "hipthrust", tiers: ladder("hipthrust"), fmt: kgTxt, plates: true, sexNote: true, title: ["Hip thrust", "Hip thrust"], desc: ["Best barbell hip thrust: {n}", "Najbolji hip thrust sa šipkom: {n}"] },
     { id: "ohp", icon: "arrow-bar-to-up", m: "ohp", tiers: ladder("ohp"), fmt: kgTxt, sexNote: true, title: ["Overhead press", "Potisak iznad glave"], desc: ["Best standing overhead press: {n}", "Najbolji potisak iznad glave iz stajanja: {n}"] },
     { id: "pullups", icon: "chevrons-up", m: "pullups", tiers: ladder("pullups"), fmt: repsTxt, sexNote: true, title: ["Pull-ups", "Zgibovi"], desc: ["Most pull-ups in one set (no assistance): {n}", "Najviše zgibova u jednoj seriji (bez pomoći): {n}"] },
     { id: "dips", icon: "chevrons-down", m: "dips", tiers: ladder("dips"), fmt: repsTxt, sexNote: true, title: ["Dips", "Propadanja"], desc: ["Most dips in one set: {n}", "Najviše propadanja u jednoj seriji: {n}"] },
@@ -2084,8 +2108,12 @@
     const r = evalAch().find(x => x.a.id === id); if (!r) return;
     const L = LI(), el = $("achDetail"), noBw = r.a.needsBw && !r.M.hasBw;
     const names = LIFT_NAMES[r.a.m];
+    // Which targets are active (men / women / general) as a chip; the ⓘ explains where to change it
+    // (shown on hover with a mouse, on tap/focus on phones).
+    const chip = '<div class="tchip"><span class="tc-l"></span><button type="button" class="tc-i">' + icon("info-circle") +
+      '</button><span class="tc-tip" role="tooltip"></span></div>';
     el.innerHTML = medalHtml(r, "big") + '<h2 id="achMTitle"></h2><p class="ad"></p>' +
-      (noBw || r.a.sexNote ? '<p class="note2"></p>' : "") + '<ul class="tiers"></ul>' + (names ? '<p class="note names"></p>' : "");
+      (noBw ? '<p class="note2"></p>' : r.a.sexNote ? chip : "") + '<ul class="tiers"></ul>' + (names ? '<p class="note names"></p>' : "");
     if (names) el.querySelector(".names").textContent = t("countsAs", { n: Array.isArray(names) ? names[L] : names }) + " " +
       (r.a.m === "plank" ? t("plankStd") : t("liftStd"));
     else if (r.a.m === "benchBw") {
@@ -2094,7 +2122,13 @@
     el.querySelector("h2").textContent = r.title;
     el.querySelector(".ad").textContent = r.a.desc[L].replace("{n}", fmtA(r, r.v));
     if (noBw) el.querySelector(".note2").textContent = t("needBw");
-    else if (r.a.sexNote) el.querySelector(".note2").textContent = t("benchNote", { s: t({ m: "sexM", f: "sexF", x: "sexX" }[r.M.sex]) });
+    else if (r.a.sexNote) {
+      const c = el.querySelector(".tchip"), b = c.querySelector(".tc-i");
+      c.querySelector(".tc-l").textContent = t({ m: "targetsM", f: "targetsF", x: "targetsX" }[r.M.sex]);
+      c.querySelector(".tc-tip").textContent = t("targetsTip");
+      b.setAttribute("aria-label", t("targetsTip"));
+      b.addEventListener("click", e => { e.stopPropagation(); c.classList.toggle("open"); b.setAttribute("aria-expanded", c.classList.contains("open")); });
+    }
     const ul = el.querySelector(".tiers");
     r.tiers.forEach((th, i) => {
       const got = i <= r.level, single = r.tiers.length === 1;
@@ -2115,6 +2149,12 @@
     if (!document.querySelector(".modal.show")) document.body.classList.remove("modal-open");
   }
   $("achClose").addEventListener("click", closeAch);
+  // Tapping anywhere outside an open ⓘ tooltip closes it.
+  document.addEventListener("click", e => {
+    document.querySelectorAll(".tchip.open").forEach(c => {
+      if (!c.contains(e.target)) { c.classList.remove("open"); c.querySelector(".tc-i").setAttribute("aria-expanded", "false"); }
+    });
+  });
   $("achModal").addEventListener("click", e => { if (e.target === $("achModal")) closeAch(); });
 
   // Achievements sheet (opened from the profile row or by tapping an "unlocked" pop-up)
