@@ -770,7 +770,9 @@
       bwField: "Body weight", bwHint: "Optional, for the bench vs bodyweight badge", saved: "Saved",
       benchNote: "Targets for: {s}. Change it under Settings in your profile.",
       countsAs: "Counts exercises named like: {n}. Assisted, machine and easier variants don't count.",
-      achSub: "{a} of {b} unlocked", achFoot: "Tap a badge to see every level and what's left."
+      achSub: "{a} of {b} unlocked", achFoot: "Tap a badge to see every level and what's left.",
+      liftStd: "Levels follow Strength Level's standards (men ~80 kg, women ~60 kg bodyweight): Bronze = Beginner, Silver = Novice, Gold = Intermediate (average lifter), Platinum = Advanced (top 20%), Diamond = Elite (top 5%), Legend = beyond Elite.",
+      plankStd: "Based on fitness-test norms: most adults hold 1–1.5 min, 2 min is top 25%, Diamond ≈ top 5%, Legend ≈ top 1%."
     },
     sr: {
       days: ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"],
@@ -852,7 +854,9 @@
       bwField: "Telesna težina", bwHint: "Opciono, za dostignuće bench naspram težine", saved: "Sačuvano",
       benchNote: "Ciljevi za: {s}. Možeš da promeniš u podešavanjima profila.",
       countsAs: "Računaju se vežbe sa nazivom kao: {n}. Asistirane, mašinske i lakše varijante se ne računaju.",
-      achSub: "Otključano {a} od {b}", achFoot: "Dodirni dostignuće da vidiš sve nivoe i koliko ti je ostalo."
+      achSub: "Otključano {a} od {b}", achFoot: "Dodirni dostignuće da vidiš sve nivoe i koliko ti je ostalo.",
+      liftStd: "Nivoi prate standarde sajta Strength Level (muškarci ~80 kg, žene ~60 kg telesne težine): Bronza = početnik, Srebro = novajlija, Zlato = srednji nivo (prosečan vežbač), Platina = napredni (top 20%), Dijamant = elita (top 5%), Legenda = iznad elite.",
+      plankStd: "Prema normama fitnes testova: većina odraslih izdrži 1–1,5 min, 2 min je top 25%, Dijamant ≈ top 5%, Legenda ≈ top 1%."
     }
   };
   function setsWord(n) {
@@ -930,7 +934,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.7";
+  const APP_VERSION = "2026-11-14.8";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -1807,7 +1811,7 @@
   async function exportBackup() {
     const fname = "gym-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
     const json = JSON.stringify(state, null, 2);
-    const done = () => { state.lastBackup = Date.now(); save(); renderNag(); if ($("profile").classList.contains("show")) renderProfile(); toast(t("backupSaved")); };
+    const done = () => { state.backupCount = (state.backupCount || (state.lastBackup ? 1 : 0)) + 1; state.lastBackup = Date.now(); save(); renderNag(); if ($("profile").classList.contains("show")) renderProfile(); toast(t("backupSaved")); };
     const touch = window.matchMedia && matchMedia("(pointer: coarse)").matches;
     if (touch && typeof File === "function" && navigator.canShare) {
       try {
@@ -1915,20 +1919,25 @@
     return null;
   }
 
-  // Targets differ by sex because absolute strength differs a lot on average.
-  // Rough ladders loosely based on common strength standards (beginner → elite);
-  // "x" = general / prefer not to say. Weights in kg, pull-ups/dips in reps, farmer's walk = kg per hand.
+  // Strength ladders, researched Nov 2026 from Strength Level's standards (strengthlevel.com, millions of
+  // logged lifts; men at 80 kg bodyweight, women at 60 kg). Tier mapping for every lift:
+  //   Bronze = Beginner (stronger than 5% of lifters)   Silver = Novice (20%)   Gold = Intermediate (50%)
+  //   Platinum = Advanced (80%)   Diamond = Elite (95%)   Legend = beyond Elite (one more step, ~top 1%)
+  // Values rounded to loadable weights. "x" (general) sits between the men's and women's numbers.
+  // Weights in kg (1-rep max), pull-ups/dips/push-ups in reps, farmer's walk in kg per hand.
   const LADDERS = {
-    bench:    { m: [40, 60, 80, 100, 120, 140], f: [20, 30, 40, 50, 60, 80],    x: [30, 40, 60, 80, 100, 120] },
-    benchBw:  { m: [0.5, 0.75, 1, 1.25, 1.5],   f: [0.35, 0.5, 0.65, 0.8, 1],   x: [0.4, 0.6, 0.8, 1, 1.25] },
-    squat:    { m: [60, 100, 140, 180, 220],     f: [40, 60, 80, 100, 120, 140], x: [60, 80, 100, 140, 180] },
-    deadlift: { m: [60, 100, 140, 180, 220, 260], f: [40, 60, 80, 100, 140, 180], x: [60, 100, 140, 180, 220] },
-    ohp:      { m: [30, 40, 50, 60, 80, 100],    f: [15, 20, 25, 30, 40, 50],    x: [20, 30, 40, 50, 60, 80] },
-    pullups:  { m: [1, 5, 10, 15, 20, 25],       f: [1, 3, 5, 8, 12, 15],        x: [1, 3, 5, 10, 15, 20] },
-    dips:     { m: [5, 10, 15, 20, 30],          f: [1, 5, 10, 15, 20],          x: [3, 8, 12, 20, 25] },
-    farmer:   { m: [20, 30, 40, 50, 60, 80],     f: [10, 15, 20, 25, 30, 40],    x: [15, 20, 30, 40, 50, 60] },
-    pushups:  { m: [10, 20, 30, 40, 50, 75],     f: [3, 10, 15, 20, 30, 40],     x: [5, 15, 25, 35, 45, 60] },
-    plank:    { x: [30, 60, 90, 120, 180, 300] } // seconds; one ladder for everyone
+    bench:    { m: [55, 75, 100, 125, 150, 180],   f: [20, 30, 47.5, 65, 87.5, 110],  x: [37.5, 52.5, 72.5, 95, 120, 145] },
+    benchBw:  { m: [0.7, 0.95, 1.25, 1.55, 1.9, 2.25], f: [0.3, 0.5, 0.8, 1.1, 1.45, 1.8], x: [0.5, 0.7, 1, 1.3, 1.65, 2] },
+    squat:    { m: [75, 100, 130, 170, 205, 245],  f: [32.5, 50, 72.5, 100, 130, 160], x: [55, 75, 100, 135, 165, 200] },
+    deadlift: { m: [90, 120, 155, 195, 240, 285],  f: [40, 60, 85, 115, 150, 185],   x: [65, 90, 120, 155, 195, 235] },
+    ohp:      { m: [35, 47.5, 62.5, 80, 97.5, 115], f: [15, 22.5, 30, 42.5, 55, 67.5], x: [25, 35, 47.5, 60, 75, 90] },
+    pullups:  { m: [1, 7, 13, 21, 29, 40],         f: [1, 3, 6, 12, 20, 28],         x: [1, 5, 10, 16, 24, 34] },
+    dips:     { m: [3, 10, 20, 31, 42, 55],        f: [1, 3, 9, 19, 29, 38],         x: [2, 6, 15, 25, 35, 46] },
+    pushups:  { m: [6, 20, 38, 60, 84, 110],       f: [1, 7, 18, 32, 47, 62],        x: [3, 13, 28, 46, 65, 85] },
+    farmer:   { m: [10, 20, 35, 57.5, 80, 100],    f: [5, 10, 20, 32.5, 47.5, 60],   x: [7.5, 15, 27.5, 45, 65, 80] },
+    // Plank (seconds, same for everyone): college norms put the median around 80–100 s and the top 25%
+    // above ~2 min; Diamond ≈ top 5%, Legend ≈ top 1%.
+    plank:    { x: [30, 60, 90, 120, 210, 300] }
   };
   const secTxt = v => v >= 60 ? Math.floor(v / 60) + ":" + String(Math.round(v % 60)).padStart(2, "0") + " min" : fmtNum(v) + " s";
   const ladder = id => M => LADDERS[id][M.sex] || LADDERS[id].x;
@@ -1944,13 +1953,16 @@
 
   // title/desc: [english, serbian]; tiers: thresholds (or a function of the metrics); m: metric name.
   const ACH = [
-    { id: "workouts", icon: "barbell", m: "workouts", tiers: [1, 10, 50, 100, 250], title: ["Workouts", "Treninzi"], desc: ["Workouts finished: {n}", "Završeni treninzi: {n}"] },
-    { id: "streak", icon: "flame", m: "streak", tiers: [2, 4, 8, 12, 26], title: ["On fire", "U plamenu"], desc: ["Most weeks in a row with a workout: {n}", "Najviše nedelja zaredom sa treningom: {n}"] },
-    { id: "perfect", icon: "calendar-check", m: "perfect", tiers: [1, 5, 10, 25], title: ["Perfect week", "Savršena nedelja"], desc: ["Weeks with every planned workout done: {n}", "Nedelje sa svim planiranim treninzima: {n}"] },
-    { id: "sets", icon: "list-check", m: "sets", tiers: [100, 500, 1000, 2500], title: ["Set machine", "Mašina za serije"], desc: ["Sets logged: {n}", "Upisane serije: {n}"] },
-    { id: "volume", icon: "truck", m: "volume", tiers: [1000, 10000, 50000, 100000], fmt: tonTxt, title: ["Heavy hauler", "Teška kategorija"], desc: ["Total weight lifted: {n}", "Ukupno podignuto: {n}"],
-      labels: [["≈ a small car", "≈ mali auto"], ["≈ a city bus", "≈ gradski autobus"], ["≈ a tank", "≈ tenk"], ["≈ a blue whale", "≈ plavi kit"]] },
-    { id: "records", icon: "trophy", m: "records", tiers: [1, 10, 25, 50], title: ["Record breaker", "Obarač rekorda"], desc: ["Personal records broken: {n}", "Oboreni lični rekordi: {n}"] },
+    // Habit badges: at ~4 workouts a week, Legend means roughly 2–3 years of steady training.
+    { id: "workouts", icon: "barbell", m: "workouts", tiers: [1, 10, 50, 150, 300, 500], title: ["Workouts", "Treninzi"], desc: ["Workouts finished: {n}", "Završeni treninzi: {n}"],
+      labels: [["first one", "prvi"], ["~3 weeks", "~3 nedelje"], ["~3 months", "~3 meseca"], ["~9 months", "~9 meseci"], ["~1.5 years", "~1,5 godina"], ["~2.5 years", "~2,5 godine"]] },
+    { id: "streak", icon: "flame", m: "streak", tiers: [2, 4, 8, 13, 26, 52], title: ["On fire", "U plamenu"], desc: ["Most weeks in a row with a workout: {n}", "Najviše nedelja zaredom sa treningom: {n}"],
+      labels: [["", ""], ["a month", "mesec dana"], ["2 months", "2 meseca"], ["a quarter", "tromesečje"], ["half a year", "pola godine"], ["a full year", "cela godina"]] },
+    { id: "perfect", icon: "calendar-check", m: "perfect", tiers: [1, 4, 12, 26, 39, 52], title: ["Perfect week", "Savršena nedelja"], desc: ["Weeks with every planned workout done: {n}", "Nedelje sa svim planiranim treninzima: {n}"] },
+    { id: "sets", icon: "list-check", m: "sets", tiers: [50, 250, 1000, 2500, 5000, 10000], title: ["Set machine", "Mašina za serije"], desc: ["Sets logged: {n}", "Upisane serije: {n}"] },
+    { id: "volume", icon: "truck", m: "volume", tiers: [1000, 10000, 50000, 100000, 250000, 500000], fmt: tonTxt, title: ["Heavy hauler", "Teška kategorija"], desc: ["Total weight lifted: {n}", "Ukupno podignuto: {n}"],
+      labels: [["≈ a small car", "≈ mali auto"], ["≈ a city bus", "≈ gradski autobus"], ["≈ a tank", "≈ tenk"], ["≈ a blue whale", "≈ plavi kit"], ["≈ a jumbo jet", "≈ džambo džet"], ["≈ a fully loaded A380", "≈ pun Airbus A380"]] },
+    { id: "records", icon: "trophy", m: "records", tiers: [1, 10, 25, 50, 100, 200], title: ["Record breaker", "Obarač rekorda"], desc: ["Personal records broken: {n}", "Oboreni lični rekordi: {n}"] },
     { id: "bench", icon: "award", m: "bench", tiers: ladder("bench"), fmt: kgTxt, plates: true, sexNote: true, title: ["Bench press", "Bench press"], desc: ["Best bench press: {n}", "Najbolji bench press: {n}"] },
     { id: "benchBw", icon: "scale", m: "benchBw", tiers: ladder("benchBw"), fmt: ratioTxt, sexNote: true, needsBw: true, title: ["Bench vs bodyweight", "Bench naspram težine"], desc: ["Best bench ÷ your body weight: {n}", "Najbolji bench ÷ tvoja težina: {n}"] },
     { id: "squat", icon: "weight", m: "squat", tiers: ladder("squat"), fmt: kgTxt, plates: true, sexNote: true, title: ["Squat", "Čučanj"], desc: ["Best squat: {n}", "Najbolji čučanj: {n}"] },
@@ -1961,10 +1973,14 @@
     { id: "pushups", icon: "arrows-vertical", m: "pushups", tiers: ladder("pushups"), fmt: repsTxt, sexNote: true, title: ["Push-ups", "Sklekovi"], desc: ["Most push-ups in one set (full push-ups): {n}", "Najviše sklekova u jednoj seriji (pravi sklekovi): {n}"] },
     { id: "plank", icon: "stopwatch", m: "plank", tiers: ladder("plank"), fmt: secTxt, title: ["Plank", "Plank"], desc: ["Longest plank hold: {n}. Log seconds in the second box (e.g. 60 or 1:30).", "Najduži plank: {n}. Upiši sekunde u drugo polje (npr. 60 ili 1:30)."] },
     { id: "farmer", icon: "walk", m: "farmer", tiers: ladder("farmer"), fmt: perHandTxt, sexNote: true, title: ["Farmer's walk", "Farmerski hod"], desc: ["Heaviest weight carried in one hand: {n}. Log the weight of one hand.", "Najveća težina u jednoj ruci: {n}. Upiši težinu jedne ruke."] },
-    { id: "weekend", icon: "sun", m: "weekend", tiers: [1, 5, 10], title: ["Weekend warrior", "Vikend ratnik"], desc: ["Weeks with both Saturday and Sunday done: {n}", "Nedelje sa odrađenom i subotom i nedeljom: {n}"] },
-    { id: "comeback", icon: "refresh", m: "comeback", tiers: [1], title: ["Comeback", "Povratak"], desc: ["Train again after 3+ weeks off", "Ponovo treniraj posle 3+ nedelje pauze"] },
-    { id: "backup", icon: "device-floppy", m: "backup", tiers: [1], title: ["Safe keeper", "Čuvar podataka"], desc: ["Save a backup of your data", "Sačuvaj kopiju podataka"] }
+    { id: "weekend", icon: "sun", m: "weekend", tiers: [1, 4, 12, 26, 39, 52], title: ["Weekend warrior", "Vikend ratnik"], desc: ["Weeks with both Saturday and Sunday done: {n}", "Nedelje sa odrađenom i subotom i nedeljom: {n}"] },
+    { id: "comeback", icon: "refresh", m: "comeback", tiers: [1, 2, 3, 4, 5, 6], title: ["Comeback", "Povratak"], desc: ["Times you came back after 3+ weeks off: {n}. Falling off happens; coming back is what counts.", "Povratci posle 3+ nedelje pauze: {n}. Pauze se dešavaju, bitno je da se vratiš."] },
+    { id: "backup", icon: "device-floppy", m: "backup", tiers: [1, 3, 6, 12, 24, 52], title: ["Safe keeper", "Čuvar podataka"], desc: ["Backups saved: {n}", "Sačuvane kopije: {n}"],
+      labels: [["", ""], ["", ""], ["", ""], ["≈ monthly for a year", "≈ mesečno godinu dana"], ["", ""], ["≈ weekly for a year", "≈ nedeljno godinu dana"]] }
   ];
+  // Bump when thresholds change: everyone's "already celebrated" levels are re-recorded silently,
+  // so a re-shuffled ladder never fires false pop-ups or swallows real ones.
+  const ACH_VERSION = 2;
 
   const monOf = wk => { const m = /^(\d{4})-W(\d{2})$/.exec(wk); return mondayOfIsoWeek(+m[1], +m[2]); };
   const heaviest = st => Math.max(-Infinity, ...st.map(x => num(x.w)).filter(v => v != null && v > 0));
@@ -2015,7 +2031,7 @@
     const p = state.profile || {}, bw = num(p.bw);
     return {
       workouts: st.workouts, streak: st.best, perfect, sets: st.sets, volume: st.volume, records, weekend, comeback,
-      backup: state.lastBackup ? 1 : 0, ...lift,
+      backup: state.backupCount || (state.lastBackup ? 1 : 0), ...lift,
       benchBw: bw && lift.bench ? lift.bench / bw : 0, hasBw: !!bw, sex: p.sex || "x"
     };
   }
@@ -2070,7 +2086,11 @@
     const names = LIFT_NAMES[r.a.m];
     el.innerHTML = medalHtml(r, "big") + '<h2 id="achMTitle"></h2><p class="ad"></p>' +
       (noBw || r.a.sexNote ? '<p class="note2"></p>' : "") + '<ul class="tiers"></ul>' + (names ? '<p class="note names"></p>' : "");
-    if (names) el.querySelector(".names").textContent = t("countsAs", { n: Array.isArray(names) ? names[L] : names });
+    if (names) el.querySelector(".names").textContent = t("countsAs", { n: Array.isArray(names) ? names[L] : names }) + " " +
+      (r.a.m === "plank" ? t("plankStd") : t("liftStd"));
+    else if (r.a.m === "benchBw") {
+      const p = document.createElement("p"); p.className = "note"; p.textContent = t("liftStd"); el.appendChild(p);
+    }
     el.querySelector("h2").textContent = r.title;
     el.querySelector(".ad").textContent = r.a.desc[L].replace("{n}", fmtA(r, r.v));
     if (noBw) el.querySelector(".note2").textContent = t("needBw");
@@ -2138,7 +2158,10 @@
   function checkAchievements() {
     if (!state.onboarded) return;
     // First run (or after an update): remember current levels silently, no flood of pop-ups.
-    if (!state.achSeen) { markSeenSilently(() => true); saveRaw(); return; }
+    // Same after the badge thresholds were changed (ACH_VERSION bump).
+    if (!state.achSeen || state.achVersion !== ACH_VERSION) {
+      state.achSeen = {}; markSeenSilently(() => true); state.achVersion = ACH_VERSION; saveRaw(); return;
+    }
     const list = evalAch();
     let changed = false;
     list.forEach(r => {
