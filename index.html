@@ -306,6 +306,19 @@
 
   /* achievements */
   .ach-count { color: var(--accent); font-weight: 800; margin-left: 4px; }
+  .ach-entry {
+    width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 4px;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  }
+  .ach-entry:hover { border-color: var(--muted); }
+  .ach-entry .ae-t { flex: 1; min-width: 0; }
+  .ach-entry .ae-t b { display: block; font-size: 15px; }
+  .ach-entry .ae-t small { color: var(--muted); font-size: 13px; }
+  .ach-prev { display: flex; flex: none; }
+  .ach-prev .medal { margin-left: -10px; box-shadow: 0 0 0 2px var(--surface-2); }
+  .ach-prev .medal:first-child { margin-left: 0; }
+  .medal.tiny { width: 34px; height: 34px; }
+  .medal.tiny svg { width: 17px; height: 17px; }
   .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
   .ach {
     background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px 10px; text-align: center;
@@ -556,11 +569,11 @@
     <div class="stats pr-stats" id="prStats"></div>
     <p class="pr-fun" id="prFun"></p>
 
-    <h3 class="pr-h"><span data-i18n="achTitle"></span> <span class="ach-count" id="achCount"></span></h3>
-    <div class="ach-grid" id="achGrid"></div>
-
-    <h3 class="pr-h" data-i18n="records"></h3>
-    <div id="prRecords"></div>
+    <button class="ach-entry" id="achOpen" type="button">
+      <span class="ach-prev" id="achPrev"></span>
+      <span class="ae-t"><b data-i18n="achTitle"></b><small id="achEntrySub"></small></span>
+      <span class="chev-r">›</span>
+    </button>
 
     <h3 class="pr-h" data-i18n="settings"></h3>
     <div class="pr-list">
@@ -582,6 +595,9 @@
       <button class="pr-row pr-btn" id="prGuide" type="button"><span data-i18n="howTo"></span><span class="chev-r">›</span></button>
     </div>
 
+    <h3 class="pr-h" data-i18n="records"></h3>
+    <div id="prRecords"></div>
+
     <h3 class="pr-h" data-i18n="dataTitle"></h3>
     <div class="pr-list">
       <button class="pr-row pr-btn" id="exportBtn" type="button"><span><b data-i18n="backup"></b><small data-i18n="backupD"></small></span><span class="chev-r">›</span></button>
@@ -592,6 +608,18 @@
     <input type="file" id="importFile" accept="application/json,.json" hidden>
     <p class="note" data-i18n="localNote"></p>
     <p class="note" id="prStorage"></p>
+  </div>
+</div>
+
+<!-- Achievements sheet -->
+<div class="modal" id="achSheet" role="dialog" aria-modal="true" aria-labelledby="achSTitle">
+  <div class="sheet tall">
+    <div class="p-top">
+      <h2 id="achSTitle"><span data-i18n="achTitle"></span> <span class="ach-count" id="achCount"></span></h2>
+      <button class="p-close" id="achSClose" type="button" data-i18n-aria="close">✕</button>
+    </div>
+    <div class="ach-grid" id="achGrid"></div>
+    <p class="note" data-i18n="achFoot"></p>
   </div>
 </div>
 
@@ -741,7 +769,8 @@
       benchFor: "Strength milestones", benchForHint: "Separate targets for men and women", sexM: "Men", sexF: "Women", sexX: "General",
       bwField: "Body weight", bwHint: "Optional, for the bench vs bodyweight badge", saved: "Saved",
       benchNote: "Targets for: {s}. Change it under Settings in your profile.",
-      countsAs: "Counts exercises named like: {n}. Assisted, machine and easier variants don't count."
+      countsAs: "Counts exercises named like: {n}. Assisted, machine and easier variants don't count.",
+      achSub: "{a} of {b} unlocked", achFoot: "Tap a badge to see every level and what's left."
     },
     sr: {
       days: ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"],
@@ -822,7 +851,8 @@
       benchFor: "Ciljevi snage", benchForHint: "Posebni ciljevi za muškarce i žene", sexM: "Muškarci", sexF: "Žene", sexX: "Opšte",
       bwField: "Telesna težina", bwHint: "Opciono, za dostignuće bench naspram težine", saved: "Sačuvano",
       benchNote: "Ciljevi za: {s}. Možeš da promeniš u podešavanjima profila.",
-      countsAs: "Računaju se vežbe sa nazivom kao: {n}. Asistirane, mašinske i lakše varijante se ne računaju."
+      countsAs: "Računaju se vežbe sa nazivom kao: {n}. Asistirane, mašinske i lakše varijante se ne računaju.",
+      achSub: "Otključano {a} od {b}", achFoot: "Dodirni dostignuće da vidiš sve nivoe i koliko ti je ostalo."
     }
   };
   function setsWord(n) {
@@ -900,7 +930,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.6";
+  const APP_VERSION = "2026-11-14.7";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -1743,7 +1773,7 @@
   $("hello").addEventListener("click", openProfile);
   $("prClose").addEventListener("click", closeProfile);
   $("profile").addEventListener("click", e => { if (e.target === $("profile")) closeProfile(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show") && !$("achModal").classList.contains("show")) closeProfile(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show") && !$("achModal").classList.contains("show") && !$("achSheet").classList.contains("show")) closeProfile(); });
   $("prNameSave").addEventListener("click", () => {
     const v = $("prNameInput").value.trim(); if (!v) { $("prNameInput").focus(); return; }
     state.name = v; save(); render(); renderProfile(); toast(t("nameSaved"));
@@ -2013,7 +2043,12 @@
 
   function renderAchievements() {
     const list = evalAch();
-    $("achCount").textContent = list.filter(r => r.level >= 0).length + "/" + list.length;
+    const got = list.filter(r => r.level >= 0);
+    $("achCount").textContent = got.length + "/" + list.length;
+    // Compact row in the profile: best 4 medals + count.
+    $("achEntrySub").textContent = t("achSub", { a: got.length, b: list.length });
+    $("achPrev").innerHTML = got.slice().sort((a, b) => b.level - a.level).slice(0, 4).map(r => medalHtml(r, "tiny")).join("") ||
+      medalHtml(list[0], "tiny");
     const g = $("achGrid"); g.innerHTML = "";
     list.forEach(r => {
       const next = r.tiers[r.level + 1];
@@ -2061,7 +2096,22 @@
   }
   $("achClose").addEventListener("click", closeAch);
   $("achModal").addEventListener("click", e => { if (e.target === $("achModal")) closeAch(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("achModal").classList.contains("show")) closeAch(); });
+
+  // Achievements sheet (opened from the profile row or by tapping an "unlocked" pop-up)
+  function openAchSheet() { renderAchievements(); $("achSheet").classList.add("show"); document.body.classList.add("modal-open"); }
+  function closeAchSheet() {
+    $("achSheet").classList.remove("show");
+    if (!document.querySelector(".modal.show")) document.body.classList.remove("modal-open");
+  }
+  $("achOpen").addEventListener("click", openAchSheet);
+  $("achSClose").addEventListener("click", closeAchSheet);
+  $("achSheet").addEventListener("click", e => { if (e.target === $("achSheet")) closeAchSheet(); });
+  // Escape closes only the top-most sheet: detail → achievements → profile.
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if ($("achModal").classList.contains("show")) closeAch();
+    else if ($("achSheet").classList.contains("show")) closeAchSheet();
+  });
 
   // Pop-up card at the top for new records and unlocked badges (queued, one at a time).
   const celebQ = []; let celebBusy = false, celebTimer = null;
@@ -2071,7 +2121,7 @@
     if (!item) { celebBusy = false; c.hidden = true; return; }
     celebBusy = true;
     c.innerHTML = item.html;
-    c.onclick = () => { clearTimeout(celebTimer); c.hidden = true; if (item.ach) { openProfile(); openAch(item.ach); } setTimeout(nextCeleb, 200); };
+    c.onclick = () => { clearTimeout(celebTimer); c.hidden = true; if (item.ach) { openAchSheet(); openAch(item.ach); } setTimeout(nextCeleb, 200); };
     c.hidden = false; c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
     buzz([30, 60, 30, 60, 80]);
     celebTimer = setTimeout(() => { c.hidden = true; setTimeout(nextCeleb, 250); }, 3400);
@@ -2101,7 +2151,7 @@
       const sub = r.tiers.length === 1 ? r.a.desc[LI()].replace("{n}", "") : tierName(r, r.level) + " · " + fmtA(r, r.tiers[r.level]);
       celebrate({ ach: r.a.id, html: medalHtml(r, "small") + '<span class="ct"><small>' + esc(t("achUnlocked")) + '</small><b>' + esc(r.title) + '</b><span>' + esc(sub) + '</span></span>' });
     });
-    if (changed) { saveRaw(); if ($("profile").classList.contains("show")) renderProfile(); }
+    if (changed) { saveRaw(); if ($("profile").classList.contains("show") || $("achSheet").classList.contains("show")) renderProfile(); }
   }
 
   // New personal record while logging sets (heavier than anything logged before for this exercise).
