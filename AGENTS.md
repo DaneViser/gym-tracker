@@ -7,8 +7,9 @@ Read this whole file before changing anything. It is short on purpose.
 A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-tracker/**
 (repo `DaneViser/gym-tracker`, branch `main`, hosted by GitHub Pages).
 
-- **No build step, no framework, no npm, no backend, no database.** Edit a file, push, it's live.
-- Plain HTML + CSS + JavaScript, split into small files by area (see below).
+- **No build step, no framework, no npm packages, no backend, no database.** Edit a file, push, it's live.
+- Plain HTML + CSS + JavaScript **ES modules**, split into small files by area (see below).
+- **Every push runs automatic checks on GitHub** (see "Tests"). Run them locally before pushing.
 - User data lives only in the browser's `localStorage` on each phone.
 - Two languages: **English (`en`) and Serbian Latin script (`sr`)**. Never use Cyrillic.
 
@@ -16,13 +17,17 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 
 | File | What it is |
 |---|---|
-| `index.html` | Page structure only (header, sheets, templates). Loads the CSS and JS files below, in order. |
+| `index.html` | Page structure only (header, sheets, templates). Loads the CSS files and `js/main.js`. |
 | `css/*.css` | Styles, one file per area (table below). |
 | `js/*.js` | Code, one file per feature (table below). |
 | `sw.js` | Service worker: keeps a copy of the app on the phone so it works offline. |
 | `manifest.webmanifest` | "Add to home screen" settings (name, colors, icons). |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons (orange square, white dumbbell). |
-| `tools/serve.js` | Local test server: `node tools/serve.js` → http://localhost:5173 |
+| `tools/serve.js` | Local test server: `node tools/serve.js` → http://localhost:5173 (modules don't work from file://) |
+| `tools/check.js` | Static checks + unit tests (no browser). `node tools/check.js` |
+| `tools/e2e.js`, `tools/e2e/` | Browser tests in headless Chrome (`tests.js` = the scenarios). `node tools/e2e.js` |
+| `.github/workflows/checks.yml` | Runs both on every push. |
+| `package.json` | Only marks the project as ES modules and lists the commands. No dependencies. |
 | `THIRD_PARTY_LICENSES.md` | License for the Tabler icons (MIT). Keep it when using their icons. |
 | `AGENTS.md` / `CLAUDE.md` | This guide. `CLAUDE.md` just imports it. |
 
@@ -45,22 +50,29 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 
 Modern CSS nesting and variables work in all current browsers, so use them freely in new CSS (no SCSS / build needed).
 
-### JS files (plain scripts, loaded in this order)
+### JS files (ES modules)
 
-They are **not** ES modules: all files share one global scope, so any function can call a function from
-another file *when it runs*. Code that runs **immediately at load** (top-level statements) may only use things
-from the same or an **earlier** file. Startup lives in `main.js`, which loads last. Each file starts with a
-one-line description and `"use strict";`.
+`index.html` loads only `js/main.js`; every file `import`s what it uses from other files (look at the top of a
+file to see its dependencies) and `export`s its own functions. Rules that keep this safe:
+
+- **Top level = definitions only.** Anything that touches the page or storage (event listeners, reading
+  localStorage) goes inside the file's `export function init()`, which `main.js` calls once at startup.
+  This is why every module can also be loaded in Node for the tests.
+- **You can't reassign another file's variable.** Use its setter: `replaceState(data)` (state.js),
+  `setLangValue()` (state.js), `setViewMonday()` (dates.js). `state` is one object — mutate it, never replace it.
+- New import? Add the name to the `import { … }` line at the top. `node tools/check.js` tells you if one is wrong.
 
 | File | What's in it |
 |---|---|
+| `main.js` | Startup: `loadState()`, every file's `init()`, first `render()`, welcome. The only file index.html loads. |
 | `version.js` | `APP_VERSION` — **bump on every deploy**. |
+| `dom.js` | `$()` = `document.getElementById`. |
 | `i18n.js` | `I18N` — **all UI text**, `en:` block then `sr:` block; `setsWord()` (Serbian plurals). |
 | `starter.js` | `STARTER` 4-day program (texts as `[en, sr]`), `starterProgram()`, `tr()`. |
-| `state.js` | `KEY`, language detection, `t()`, `esc()`, `uid()`, loading/saving `state`, `program()`. |
-| `dates.js` | Week maths (Monday-based ISO weeks), date/number formatting. |
-| `data.js` | `sessionData`, `setsOf`, `bestSet`, `lastSets`, `setText`, `num`. |
-| `render.js` | `$()`, `render()` → `renderSession()` → `renderTrackBody()` / `renderEditBody()` / `renderSetsPanel()`, history squares, "+ Add workout", `toast()`, `buzz()`, swipe between weeks. |
+| `state.js` | `state`, `loadState()`, `save()`, `replaceState()`, **`normalizeState()` (repairs old/broken data)**, `t()`, `esc()`, `uid()`, `lang`, `program()`, `onSaved()`/`onSaveFailed()` hooks. |
+| `dates.js` | Week maths (Monday-based ISO weeks), date/number formatting, `viewMonday` + `setViewMonday()`. |
+| `data.js` | `sessionData`, `setsOf`, `bestSet`, `lastSets`, `setText`, `num`, `plannedCount`. |
+| `render.js` | `render()` → `renderSession()` → `renderTrackBody()` / `renderEditBody()` / `renderSetsPanel()`, `applyStatic()`, history squares, "+ Add workout", `toast()`, `buzz()`, swipe between weeks. |
 | `timer.js` | Rest timer. |
 | `progress.js` | `entriesFor()`, `openProgress()`, `renderProgress()` (hand-made SVG chart, no library). |
 | `welcome.js` | First-visit flow, how-to guide, `setLang()`. |
@@ -69,10 +81,9 @@ one-line description and `"use strict";`.
 | `achievements.js` | `ICONS` (Tabler, MIT), `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
 | `clock.js` | Header clock. |
 | `offline.js` | Service worker registration, `navigator.storage.persist()`, new-version check. |
-| `main.js` | Startup: `applyStatic(); render(); …` |
-
-**Adding a new JS or CSS file:** add its `<script>`/`<link>` tag to `index.html` in the right place **and**
-add it to `SHELL` in `sw.js` (so it works offline from the first install).
+**Adding a new JS file:** import it from the file(s) that use it (and call its `init()` from `main.js` if it
+has one); **adding a CSS file:** add its `<link>` to `index.html`. Either way, add it to `SHELL` in `sw.js`
+(so it works offline). `node tools/check.js` fails if you forget any of these.
 
 ## Offline and updates (read before deploying)
 
@@ -130,7 +141,7 @@ make code tolerate them missing (see how `setsOf()` falls back from `sets` to `w
 5. Use the colour tokens (`var(--accent)` etc.), never hard-coded colours, so dark mode keeps working.
 6. Wrap every `localStorage` call in `try/catch` (private mode can throw).
 7. After changing data in an event handler: `save(); render();`.
-8. Don't give two top-level things the same name in different JS files (they share one scope).
+8. Never put page or storage access at the top level of a module — put it in `init()`.
 
 ## Common changes (recipes)
 
@@ -163,16 +174,31 @@ metas in `index.html` and `manifest.webmanifest` if you change the background.
 
 **Change the icon**: replace the three PNGs (same names and sizes: 180, 192, 512 px), bump `CACHE` in `sw.js`.
 
-## Test locally
+## Tests (run before every push)
 
 ```bash
-node tools/serve.js
+node tools/check.js
 ```
 
-Open http://localhost:5173 at a 375×812 viewport. Check both languages (profile → Language),
-both themes, and the browser console for errors. To test with data, set
-`localStorage.setItem('gymtracker.v1', JSON.stringify({...}))` and reload.
-**Clear your test data afterwards** (`localStorage.clear()`). Stop only your own server process when done.
+```bash
+node tools/e2e.js
+```
+
+- `check.js` (seconds, no browser): every module loads, English/Serbian keys and `{placeholders}` match, every
+  `t("key")` / `data-i18n` / `$("id")` exists, badges have 6 rising tiers, files are linked and in `SHELL`,
+  `APP_VERSION` bumped, plus unit tests (week maths incl. week 53, number parsing, best set, exercise-name
+  matching, Serbian plurals, data repair, badge metrics).
+- `e2e.js` (~1 min, needs Chrome/Edge): ~36 scenarios in a 375×812 frame — first visit, logging weird inputs,
+  editing, deleting, corrupted / malformed / very old saved data, storage full, backup round-trip and bad
+  restore files, HTML injection in names, Serbian on every screen, long names, swipe, timer, 3 years of data
+  (speed). Every scenario also fails on any JavaScript error or sideways scrolling.
+  `node tools/e2e.js --watch` then open the printed URL to watch it run in a normal browser.
+- **When you add a feature, add a scenario** in `tools/e2e/tests.js` (copy a similar one).
+- GitHub runs both on every push (`.github/workflows/checks.yml`); a red ✗ in the repo = read the log.
+
+To try the app by hand: `node tools/serve.js`, open http://localhost:5173 at 375×812, check both languages
+(profile → Language), both themes, and the console. Clear test data afterwards (`localStorage.clear()`).
+Stop only your own server process when done.
 
 ## Deploy (push = publish)
 
@@ -196,6 +222,7 @@ Phones may cache the old page for up to ~10 minutes.
 
 ## Before you finish, check
 
+- [ ] `node tools/check.js` and `node tools/e2e.js` both pass.
 - [ ] `APP_VERSION` bumped in `js/version.js`.
 - [ ] Both `en` and `sr` strings added for anything new.
 - [ ] New files added to `index.html` **and** `SHELL` in `sw.js`.

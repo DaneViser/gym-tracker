@@ -1,10 +1,11 @@
 // Built-in 4-day starter program in both languages: STARTER, starterProgram(), tr() (shows starter
 // names in the current language unless the user renamed them).
-"use strict";
+
+import { lang } from "./state.js";
 
 // Starter program, in both languages. Stored workouts keep plain strings;
 // if a stored string still equals a starter default, it is shown in the current language.
-const STARTER = [
+export const STARTER = [
   { id: "upper1", dow: 1, altDow: null, title: ["Upper 1", "Gornji 1"], sub: ["Push, pull, shoulder health", "Guranje, vučenje, zdravlje ramena"], ex: [
     { id: "bench", name: ["Bench press / machine chest press", "Bench press / mašina za grudi"], sets: ["3–4 × 6–10", "3–4 × 6–10"] },
     { id: "mpress", name: ["Machine shoulder press", "Potisak za ramena na mašini"], sets: ["3 × 8–10", "3 × 8–10"] },
@@ -46,8 +47,8 @@ const STARTER = [
     { id: "sideplank", name: ["Side plank", "Bočni plank"], sets: ["3 × 30–45 s / side", "3 × 30–45 s / strana"], isNew: true }
   ]}
 ];
-const LI = () => lang === "sr" ? 1 : 0;
-function starterProgram() {
+export const LI = () => lang === "sr" ? 1 : 0;
+export function starterProgram() {
   const i = LI();
   return STARTER.map(s => ({
     id: s.id, dow: s.dow, altDow: s.altDow, title: s.title[i], sub: s.sub[i],
@@ -55,9 +56,9 @@ function starterProgram() {
   }));
 }
 // Show starter defaults in the current language (only if the user hasn't changed the text).
-const starterIndex = {};
+export const starterIndex = {};
 STARTER.forEach(s => { starterIndex["w:" + s.id] = s; s.ex.forEach(e => { starterIndex["e:" + e.id] = e; }); });
-function tr(kind, id, field, value) {
+export function tr(kind, id, field, value) {
   const src = starterIndex[kind + ":" + id];
   if (!src || !src[field]) return value;
   return src[field].includes(value) ? src[field][LI()] : value;

@@ -1,10 +1,15 @@
 // Progress chart sheet (📈): entriesFor(), openProgress(), renderProgress() — hand-made SVG chart.
-"use strict";
+
+import { $ } from "./dom.js";
+import { tr } from "./starter.js";
+import { esc, program, sorted, state, t } from "./state.js";
+import { addDays, fmtLong, fmtNum, fmtShort, mondayOfIsoWeek, startOfWeek, weekKey } from "./dates.js";
+import { bestSet, filled, num, setText, setsOf, setsText } from "./data.js";
 
 // ======================================================================
 // Progress charts
 // ======================================================================
-function entriesFor(exId) {
+export function entriesFor(exId) {
   const byId = {}; program().forEach(s => { byId[s.id] = s; });
   const out = [];
   Object.keys(state.weeks).sort().forEach(wk => {
@@ -24,8 +29,10 @@ function entriesFor(exId) {
   return out.sort((a, b) => a.date - b.date);
 }
 
-let pExId = null, pResize = null;
-function openProgress(sess) {
+export let pExId = null, pResize = null;
+// sess: open with that workout's exercises preselected; preferId: open on this exercise.
+export function openProgress(sess, preferId) {
+  if (preferId) pExId = preferId;
   const sel = $("pSelect"); sel.innerHTML = "";
   const seen = new Set(); let firstWithData = null, firstInSess = null, any = false;
   sorted().forEach(s => {
@@ -51,16 +58,11 @@ function openProgress(sess) {
   renderProgress();
   pResize = () => renderProgress(); window.addEventListener("resize", pResize);
 }
-function closeProgress() { $("progress").classList.remove("show"); document.body.classList.remove("modal-open"); if (pResize) window.removeEventListener("resize", pResize); }
-$("pSelect").addEventListener("change", e => { pExId = e.target.value; renderProgress(); });
-$("pClose").addEventListener("click", closeProgress);
-$("progress").addEventListener("click", e => { if (e.target === $("progress")) closeProgress(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("progress").classList.contains("show")) closeProgress(); });
-$("progressBtn").addEventListener("click", () => openProgress(null));
+export function closeProgress() { $("progress").classList.remove("show"); document.body.classList.remove("modal-open"); if (pResize) window.removeEventListener("resize", pResize); }
 
-function niceStep(range, target) { const raw = range / target, mag = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / mag; return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag; }
+export function niceStep(range, target) { const raw = range / target, mag = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / mag; return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag; }
 
-function renderProgress() {
+export function renderProgress() {
   const body = $("pBody"); body.innerHTML = "";
   if (!pExId) { body.innerHTML = '<div class="p-empty">' + t("nothing") + '</div>'; return; }
   const all = entriesFor(pExId);
@@ -165,4 +167,13 @@ function renderProgress() {
     tb.appendChild(tr_);
   });
   body.appendChild(tbl);
+}
+
+// Runs once at startup (called from main.js): connects buttons and other page events.
+export function init() {
+  $("pSelect").addEventListener("change", e => { pExId = e.target.value; renderProgress(); });
+  $("pClose").addEventListener("click", closeProgress);
+  $("progress").addEventListener("click", e => { if (e.target === $("progress")) closeProgress(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("progress").classList.contains("show")) closeProgress(); });
+  $("progressBtn").addEventListener("click", () => openProgress(null));
 }

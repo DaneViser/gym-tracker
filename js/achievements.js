@@ -1,13 +1,21 @@
 // Achievements: ICONS (Tabler, MIT), LIFTS name matching, LADDERS (researched standards), ACH badge
 // list, ACH_VERSION, metrics, badge sheet + detail, celebration pop-ups, new-record pop-up.
-"use strict";
+
+import { $ } from "./dom.js";
+import { LI, tr } from "./starter.js";
+import { esc, lang, program, save, saveRaw, state, t } from "./state.js";
+import { fmtNum, locale, mondayOfIsoWeek } from "./dates.js";
+import { filled, num, setsOf } from "./data.js";
+import { buzz, toast } from "./render.js";
+import { allSessionRecords, computeStats, hasActivity, renderProfile } from "./profile.js";
+import { DAY } from "./controls.js";
 
 // ======================================================================
 // Achievements  (icons: Tabler Icons, MIT license, see THIRD_PARTY_LICENSES.md)
 // ======================================================================
 // Everything here is DERIVED from state.weeks / state.program, so old history counts.
 // Only state.achSeen (highest tier already celebrated per badge) is stored, so we know what is new.
-const ICONS = {
+export const ICONS = {
   "info-circle": "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 9h.01 M11 12h1v4h1",
   "arrow-big-up-lines": "M9 12h-3.586a1 1 0 0 1 -.707 -1.707l6.586 -6.586a1 1 0 0 1 1.414 0l6.586 6.586a1 1 0 0 1 -.707 1.707h-3.586v3h-6v-3z M9 21h6 M9 18h6",
   stopwatch: "M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z M14.5 10.5l-2.5 2.5 M17 8l1 -1 M14 3h-4",
@@ -31,17 +39,17 @@ const ICONS = {
   truck: "M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5",
   weight: "M12 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0 M6.835 9h10.33a1 1 0 0 1 .984 .821l1.637 9a1 1 0 0 1 -.984 1.179h-13.604a1 1 0 0 1 -.984 -1.179l1.637 -9a1 1 0 0 1 .984 -.821z"
 };
-const icon = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[n] + '"/></svg>';
-const TIER_COLORS = ["#c47a3d", "#9aa5b1", "#e8a90c", "#38bdd1", "#8b6cf0", "#e5484d"]; // bronze → legend
-const kgTxt = v => fmtNum(v) + " " + t("kg");
-const tonTxt = v => v >= 1000 ? fmtNum(v / 1000) + " t" : fmtNum(v) + " " + t("kg");
-const ratioTxt = v => (Math.round(v * 100) / 100).toLocaleString(locale(), { maximumFractionDigits: 2 }) + "×";
-const plates = n => lang === "sr" ? n + (n === 1 ? " ploča" : n < 5 ? " ploče" : " ploča") + " po strani" : n + (n === 1 ? " plate" : " plates") + " per side";
+export const icon = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[n] + '"/></svg>';
+export const TIER_COLORS = ["#c47a3d", "#9aa5b1", "#e8a90c", "#38bdd1", "#8b6cf0", "#e5484d"]; // bronze → legend
+export const kgTxt = v => fmtNum(v) + " " + t("kg");
+export const tonTxt = v => v >= 1000 ? fmtNum(v / 1000) + " t" : fmtNum(v) + " " + t("kg");
+export const ratioTxt = v => (Math.round(v * 100) / 100).toLocaleString(locale(), { maximumFractionDigits: 2 }) + "×";
+export const plates = n => lang === "sr" ? n + (n === 1 ? " ploča" : n < 5 ? " ploče" : " ploča") + " po strani" : n + (n === 1 ? " plate" : " plates") + " per side";
 
 // Which exercises count for each lift badge: starter ids + common names (EN and SR).
 // reps: true = measured by best reps in one set (bodyweight moves), otherwise heaviest weight.
 // Variants that would inflate numbers (incline, split squat, Romanian, assisted, machine…) are excluded.
-const LIFTS = {
+export const LIFTS = {
   bench: { inc: /bench|benč|potisak (sa|na) (ravnoj )?klup/i, exc: /incline|decline|kos[aoi]|close.?grip|dip|hip|thrust|trast/i },
   squat: { inc: /squat|čučanj|cucanj/i, exc: /split|bugar|bulgar|goblet|hack|jump|skok/i },
   deadlift: { inc: /deadlift|mrtvo dizanje/i, exc: /romanian|rumunsk|rdl|stiff|single.?leg|jednoj nozi/i },
@@ -54,12 +62,12 @@ const LIFTS = {
   pushups: { inc: /push.?ups?|sklek/i, exc: /knee|kolen|incline|kos[aoi]|wall|zid|assist|asist/i, reps: true }
 };
 // Seconds from "90", "90s" or "1:30".
-function secs(v) {
+export function secs(v) {
   const s = String(v == null ? "" : v).trim();
   const m = /^(\d+):(\d{1,2})$/.exec(s);
   return m ? +m[1] * 60 + +m[2] : num(s);
 }
-function liftOf(exId) {
+export function liftOf(exId) {
   let name = exId;
   program().forEach(s => s.ex.forEach(e => { if (e.id === exId) name += " " + (e.name || ""); }));
   for (const k in LIFTS) if (LIFTS[k].inc.test(name) && !LIFTS[k].exc.test(name)) return k;
@@ -72,7 +80,7 @@ function liftOf(exId) {
 //   Platinum = Advanced (80%)   Diamond = Elite (95%)   Legend = beyond Elite (one more step, ~top 1%)
 // Values rounded to loadable weights. "x" (general) sits between the men's and women's numbers.
 // Weights in kg (1-rep max), pull-ups/dips/push-ups in reps, farmer's walk in kg per hand.
-const LADDERS = {
+export const LADDERS = {
   bench:    { m: [55, 75, 100, 125, 150, 180],   f: [20, 30, 47.5, 65, 87.5, 110],  x: [37.5, 52.5, 72.5, 95, 120, 145] },
   benchBw:  { m: [0.7, 0.95, 1.25, 1.55, 1.9, 2.25], f: [0.3, 0.5, 0.8, 1.1, 1.45, 1.8], x: [0.5, 0.7, 1, 1.3, 1.65, 2] },
   squat:    { m: [75, 100, 130, 170, 205, 245],  f: [32.5, 50, 72.5, 100, 130, 160], x: [55, 75, 100, 135, 165, 200] },
@@ -87,21 +95,21 @@ const LADDERS = {
   // above ~2 min; Diamond ≈ top 5%, Legend ≈ top 1%.
   plank:    { x: [30, 60, 90, 120, 210, 300] }
 };
-const secTxt = v => v >= 60 ? Math.floor(v / 60) + ":" + String(Math.round(v % 60)).padStart(2, "0") + " min" : fmtNum(v) + " s";
-const ladder = id => M => LADDERS[id][M.sex] || LADDERS[id].x;
-const repsTxt = v => fmtNum(v) + " " + (lang === "en" && v === 1 ? "rep" : t("reps"));
+export const secTxt = v => v >= 60 ? Math.floor(v / 60) + ":" + String(Math.round(v % 60)).padStart(2, "0") + " min" : fmtNum(v) + " s";
+export const ladder = id => M => LADDERS[id][M.sex] || LADDERS[id].x;
+export const repsTxt = v => fmtNum(v) + " " + (lang === "en" && v === 1 ? "rep" : t("reps"));
 // Shown on lift badges so people know what to name an exercise for it to count.
-const LIFT_NAMES = {
+export const LIFT_NAMES = {
   bench: "Bench press", squat: ["Squat, Front squat", "Čučanj, Squat"], deadlift: ["Deadlift, Sumo deadlift", "Mrtvo dizanje, Deadlift"],
   ohp: ["Overhead press, Military press", "Potisak iznad glave, Military press"], pullups: ["Pull-ups, Chin-ups", "Zgibovi, Pull-ups"],
   dips: ["Dips", "Propadanja, Dips"], farmer: ["Farmer's walk / carry", "Farmerski hod, Farmer's walk"],
   plank: ["Plank (not side plank)", "Plank, Izdržaj (ne bočni plank)"], pushups: ["Push-ups", "Sklekovi, Push-ups"],
   hipthrust: ["Hip thrust (barbell; not glute bridge)", "Hip thrust, Potisak kukovima (sa šipkom; ne glute bridge)"]
 };
-const perHandTxt = v => fmtNum(v) + " " + t("kg") + " " + (lang === "sr" ? "po ruci" : "per hand");
+export const perHandTxt = v => fmtNum(v) + " " + t("kg") + " " + (lang === "sr" ? "po ruci" : "per hand");
 
 // title/desc: [english, serbian]; tiers: thresholds (or a function of the metrics); m: metric name.
-const ACH = [
+export const ACH = [
   // Habit badges: at ~4 workouts a week, Legend means roughly 2–3 years of steady training.
   { id: "workouts", icon: "barbell", m: "workouts", tiers: [1, 10, 50, 150, 300, 500], title: ["Workouts", "Treninzi"], desc: ["Workouts finished: {n}", "Završeni treninzi: {n}"],
     labels: [["first one", "prvi"], ["~3 weeks", "~3 nedelje"], ["~3 months", "~3 meseca"], ["~9 months", "~9 meseci"], ["~1.5 years", "~1,5 godina"], ["~2.5 years", "~2,5 godine"]] },
@@ -130,14 +138,14 @@ const ACH = [
 ];
 // Bump when thresholds change: everyone's "already celebrated" levels are re-recorded silently,
 // so a re-shuffled ladder never fires false pop-ups or swallows real ones.
-const ACH_VERSION = 2;
-const ACH_CATS = [{ id: "strength", icon: "💪", key: "catStrength" }, { id: "habit", icon: "🔥", key: "catHabit" }];
-const achCat = a => a.sexNote || a.m === "plank" ? "strength" : "habit";
+export const ACH_VERSION = 2;
+export const ACH_CATS = [{ id: "strength", icon: "💪", key: "catStrength" }, { id: "habit", icon: "🔥", key: "catHabit" }];
+export const achCat = a => a.sexNote || a.m === "plank" ? "strength" : "habit";
 
-const monOf = wk => { const m = /^(\d{4})-W(\d{2})$/.exec(wk); return mondayOfIsoWeek(+m[1], +m[2]); };
-const heaviest = st => Math.max(-Infinity, ...st.map(x => num(x.w)).filter(v => v != null && v > 0));
+export const monOf = wk => { const m = /^(\d{4})-W(\d{2})$/.exec(wk); return mondayOfIsoWeek(+m[1], +m[2]); };
+export const heaviest = st => Math.max(-Infinity, ...st.map(x => num(x.w)).filter(v => v != null && v > 0));
 
-function achMetrics() {
+export function achMetrics() {
   const st = computeStats();
   const byId = {}; program().forEach(s => { byId[s.id] = s; });
   const dowOf = sid => byId[sid] ? byId[sid].dow : 0;
@@ -188,7 +196,7 @@ function achMetrics() {
   };
 }
 
-function evalAch() {
+export function evalAch() {
   const M = achMetrics(), L = LI();
   return ACH.map(a => {
     const tiers = typeof a.tiers === "function" ? a.tiers(M) : a.tiers;
@@ -199,17 +207,17 @@ function evalAch() {
     return { a, tiers, v, level, M, title: a.title[L] };
   });
 }
-const tierColor = (r, i) => r.tiers.length === 1 ? TIER_COLORS[2] : TIER_COLORS[Math.min(i, TIER_COLORS.length - 1)];
-const tierName = (r, i) => r.tiers.length === 1 ? t("unlockedOne") : t("tierNames")[Math.min(i, 5)];
-const fmtA = (r, v) => (r.a.fmt || fmtNum)(v);
-function medalHtml(r, size) {
+export const tierColor = (r, i) => r.tiers.length === 1 ? TIER_COLORS[2] : TIER_COLORS[Math.min(i, TIER_COLORS.length - 1)];
+export const tierName = (r, i) => r.tiers.length === 1 ? t("unlockedOne") : t("tierNames")[Math.min(i, 5)];
+export const fmtA = (r, v) => (r.a.fmt || fmtNum)(v);
+export function medalHtml(r, size) {
   const locked = r.level < 0;
   return '<span class="medal' + (locked ? " locked" : "") + (size ? " " + size : "") + '"' +
     (locked ? "" : ' style="--c:' + tierColor(r, r.level) + '"') + '>' + icon(r.a.icon) +
     (locked ? '<span class="lk">' + icon("lock") + '</span>' : "") + '</span>';
 }
 
-function renderAchievements() {
+export function renderAchievements() {
   const list = evalAch();
   const got = list.filter(r => r.level >= 0);
   $("achCount").textContent = got.length + "/" + list.length;
@@ -245,7 +253,7 @@ function renderAchievements() {
   });
 }
 
-function openAch(id) {
+export function openAch(id) {
   const r = evalAch().find(x => x.a.id === id); if (!r) return;
   const L = LI(), el = $("achDetail"), noBw = r.a.needsBw && !r.M.hasBw;
   const names = LIFT_NAMES[r.a.m];
@@ -285,39 +293,26 @@ function openAch(id) {
   });
   $("achModal").classList.add("show"); document.body.classList.add("modal-open");
 }
-function closeAch() {
+export function closeAch() {
   $("achModal").classList.remove("show");
   if (!document.querySelector(".modal.show")) document.body.classList.remove("modal-open");
 }
-$("achClose").addEventListener("click", closeAch);
+
 // Tapping anywhere outside an open ⓘ tooltip closes it.
-document.addEventListener("click", e => {
-  document.querySelectorAll(".tchip.open").forEach(c => {
-    if (!c.contains(e.target)) { c.classList.remove("open"); c.querySelector(".tc-i").setAttribute("aria-expanded", "false"); }
-  });
-});
-$("achModal").addEventListener("click", e => { if (e.target === $("achModal")) closeAch(); });
 
 // Achievements sheet (opened from the profile row or by tapping an "unlocked" pop-up)
-function openAchSheet() { renderAchievements(); $("achSheet").classList.add("show"); document.body.classList.add("modal-open"); }
-function closeAchSheet() {
+export function openAchSheet() { renderAchievements(); $("achSheet").classList.add("show"); document.body.classList.add("modal-open"); }
+export function closeAchSheet() {
   $("achSheet").classList.remove("show");
   if (!document.querySelector(".modal.show")) document.body.classList.remove("modal-open");
 }
-$("achOpen").addEventListener("click", openAchSheet);
-$("achSClose").addEventListener("click", closeAchSheet);
-$("achSheet").addEventListener("click", e => { if (e.target === $("achSheet")) closeAchSheet(); });
+
 // Escape closes only the top-most sheet: detail → achievements → profile.
-document.addEventListener("keydown", e => {
-  if (e.key !== "Escape") return;
-  if ($("achModal").classList.contains("show")) closeAch();
-  else if ($("achSheet").classList.contains("show")) closeAchSheet();
-});
 
 // Pop-up card at the top for new records and unlocked badges (queued, one at a time).
-const celebQ = []; let celebBusy = false, celebTimer = null;
-function celebrate(item) { celebQ.push(item); if (!celebBusy) nextCeleb(); }
-function nextCeleb() {
+export const celebQ = []; export let celebBusy = false, celebTimer = null;
+export function celebrate(item) { celebQ.push(item); if (!celebBusy) nextCeleb(); }
+export function nextCeleb() {
   const c = $("celebrate"), item = celebQ.shift();
   if (!item) { celebBusy = false; c.hidden = true; return; }
   celebBusy = true;
@@ -328,15 +323,15 @@ function nextCeleb() {
   celebTimer = setTimeout(() => { c.hidden = true; setTimeout(nextCeleb, 250); }, 3400);
 }
 
-var achTimer = null; // var: save() may run before this line in edge cases
-function scheduleAchCheck() { clearTimeout(achTimer); achTimer = setTimeout(checkAchievements, 700); }
+export var achTimer = null; // var: save() may run before this line in edge cases
+export function scheduleAchCheck() { clearTimeout(achTimer); achTimer = setTimeout(checkAchievements, 700); }
 // Bench badges are tracked per ladder (men / women / general), so switching never loses or fakes progress.
-const seenKey = r => r.a.sexNote ? r.a.id + ":" + r.M.sex : r.a.id;
-function markSeenSilently(filter) {
+export const seenKey = r => r.a.sexNote ? r.a.id + ":" + r.M.sex : r.a.id;
+export function markSeenSilently(filter) {
   state.achSeen = state.achSeen || {};
   evalAch().filter(filter).forEach(r => { const k = seenKey(r); state.achSeen[k] = Math.max(state.achSeen[k] != null ? state.achSeen[k] : -1, r.level); });
 }
-function checkAchievements() {
+export function checkAchievements() {
   if (!state.onboarded) return;
   // First run (or after an update): remember current levels silently, no flood of pop-ups.
   // Same after the badge thresholds were changed (ACH_VERSION bump).
@@ -359,8 +354,8 @@ function checkAchievements() {
 }
 
 // New personal record while logging sets (heavier than anything logged before for this exercise).
-const prShown = {};
-function bestWeightExcept(exId, key, sid) {
+export const prShown = {};
+export function bestWeightExcept(exId, key, sid) {
   let best = null;
   for (const wk in state.weeks) for (const s2 in state.weeks[wk]) {
     if (wk === key && s2 === sid) continue;
@@ -369,7 +364,7 @@ function bestWeightExcept(exId, key, sid) {
   }
   return best;
 }
-function checkPR(key, sess, ex, cur) {
+export function checkPR(key, sess, ex, cur) {
   const w = heaviest(filled(cur));
   if (!isFinite(w)) return;
   const k = key + ":" + sess.id + ":" + ex.id;
@@ -384,15 +379,34 @@ function checkPR(key, sess, ex, cur) {
 }
 
 // Profile settings for bench targets
-$("prSex").addEventListener("click", e => {
-  const b = e.target.closest("button[data-v]"); if (!b) return;
-  state.profile = Object.assign({}, state.profile, { sex: b.dataset.v });
-  markSeenSilently(r => r.a.sexNote); // switching ladders is not an achievement (entering body weight still celebrates)
-  save(); renderProfile();
-});
-$("prBwSave").addEventListener("click", () => {
-  const n = num($("prBw").value);
-  state.profile = Object.assign({}, state.profile, { bw: n && n >= 25 && n <= 350 ? String(n) : "" });
-  save(); renderProfile(); toast(t("saved"));
-});
-$("prBw").addEventListener("keydown", e => { if (e.key === "Enter") $("prBwSave").click(); });
+
+// Runs once at startup (called from main.js): connects buttons and other page events.
+export function init() {
+  $("achClose").addEventListener("click", closeAch);
+  document.addEventListener("click", e => {
+    document.querySelectorAll(".tchip.open").forEach(c => {
+      if (!c.contains(e.target)) { c.classList.remove("open"); c.querySelector(".tc-i").setAttribute("aria-expanded", "false"); }
+    });
+  });
+  $("achModal").addEventListener("click", e => { if (e.target === $("achModal")) closeAch(); });
+  $("achOpen").addEventListener("click", openAchSheet);
+  $("achSClose").addEventListener("click", closeAchSheet);
+  $("achSheet").addEventListener("click", e => { if (e.target === $("achSheet")) closeAchSheet(); });
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if ($("achModal").classList.contains("show")) closeAch();
+    else if ($("achSheet").classList.contains("show")) closeAchSheet();
+  });
+  $("prSex").addEventListener("click", e => {
+    const b = e.target.closest("button[data-v]"); if (!b) return;
+    state.profile = Object.assign({}, state.profile, { sex: b.dataset.v });
+    markSeenSilently(r => r.a.sexNote); // switching ladders is not an achievement (entering body weight still celebrates)
+    save(); renderProfile();
+  });
+  $("prBwSave").addEventListener("click", () => {
+    const n = num($("prBw").value);
+    state.profile = Object.assign({}, state.profile, { bw: n && n >= 25 && n <= 350 ? String(n) : "" });
+    save(); renderProfile(); toast(t("saved"));
+  });
+  $("prBw").addEventListener("keydown", e => { if (e.key === "Enter") $("prBwSave").click(); });
+}

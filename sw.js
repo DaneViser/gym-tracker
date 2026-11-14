@@ -14,7 +14,7 @@ const SHELL = [
   "./", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "css/tokens.css", "css/base.css", "css/sheets.css", "css/week.css", "css/workouts.css", "css/progress.css",
   "css/clock.css", "css/achievements.css", "css/profile.css", "css/notices.css", "css/timer.css", "css/responsive.css",
-  "js/version.js", "js/i18n.js", "js/starter.js", "js/state.js", "js/dates.js", "js/data.js", "js/render.js",
+  "js/version.js", "js/dom.js", "js/i18n.js", "js/starter.js", "js/state.js", "js/dates.js", "js/data.js", "js/render.js",
   "js/timer.js", "js/progress.js", "js/welcome.js", "js/profile.js", "js/controls.js", "js/achievements.js",
   "js/clock.js", "js/offline.js", "js/main.js"
 ];

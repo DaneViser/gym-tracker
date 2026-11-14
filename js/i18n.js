@@ -1,10 +1,11 @@
 // All UI text in English and Serbian (Latin): I18N, setsWord(). Add every new string to BOTH languages.
-"use strict";
+
+import { lang } from "./state.js";
 
 // ======================================================================
 // Translations (English + Serbian, Latin script)
 // ======================================================================
-const I18N = {
+export const I18N = {
   en: {
     days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     daysLong: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -19,7 +20,7 @@ const I18N = {
     footHint: "Tap the box on the right of an exercise to log your sets.",
     clearTicks: "Clear ticks", clearConfirm: "Clear all ticks and sets for {t} this week?",
     edit: "✏️ Edit", progressFor: "Progress for this workout",
-    log: "Log", last: "last {v}", setWord1: "set", setWordN: "sets", set: "Set {n}", reps: "reps", kg: "kg",
+    log: "Log", last: "last {v}", set: "Set {n}", reps: "reps", kg: "kg",
     lastTime: "Last time: {s}", sameAsLast: "Same as last time", addSet: "+ Set", removeSet: "− Set",
     workoutName: "Workout name", workoutNamePh: "e.g. Push day", desc: "Short description (optional)", descPh: "e.g. Chest, shoulders, triceps",
     day: "Day", altDay: "Or (if you miss it)", noOtherDay: "No other day",
@@ -28,6 +29,7 @@ const I18N = {
     addExercise: "+ Add exercise", deleteWorkout: "Delete workout", done: "Done",
     deleteConfirm: "Delete the workout “{t}”? Past ticks for it will be hidden.",
     toastDone: "Workout done 💪", nameSaved: "Name saved", starterLoaded: "Starter program loaded", restored: "Backup restored",
+    saveFailed: "⚠️ Couldn't save on this phone (storage full or blocked). Make a backup!",
     rest: "Rest", tapStop: "Tap again to stop", go: "Go!",
     jumpWeek: "Jump to this week", changeName: "Change name", loadStarter: "Load starter program", backup: "Back up data", restore: "Restore backup",
     footNote: "Everything is saved on this phone only. Swipe left or right to change weeks. Backups and settings are in your profile (top right).",
@@ -114,6 +116,7 @@ const I18N = {
     addExercise: "+ Dodaj vežbu", deleteWorkout: "Obriši trening", done: "Gotovo",
     deleteConfirm: "Obrisati trening „{t}“? Ranija čekiranja za njega se više neće prikazivati.",
     toastDone: "Trening završen 💪", nameSaved: "Ime sačuvano", starterLoaded: "Početni program učitan", restored: "Kopija vraćena",
+    saveFailed: "⚠️ Čuvanje nije uspelo (memorija puna ili blokirana). Napravi kopiju!",
     rest: "Odmor", tapStop: "Dodirni opet za stop", go: "Kreni!",
     jumpWeek: "Idi na ovu nedelju", changeName: "Promeni ime", loadStarter: "Učitaj početni program", backup: "Sačuvaj kopiju", restore: "Vrati kopiju",
     footNote: "Sve se čuva samo na ovom telefonu. Prevuci levo ili desno da promeniš nedelju. Kopije i podešavanja su u tvom profilu (gore desno).",
@@ -178,7 +181,7 @@ const I18N = {
     plankStd: "Prema normama fitnes testova: većina odraslih izdrži 1–1,5 min, 2 min je top 25%, Dijamant ≈ top 5%, Legenda ≈ top 1%."
   }
 };
-function setsWord(n) {
+export function setsWord(n) {
   if (lang === "sr") {
     const d = n % 10, h = n % 100;
     return (d >= 2 && d <= 4 && !(h >= 12 && h <= 14)) ? "serije" : "serija";

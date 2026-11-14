@@ -1,10 +1,20 @@
 // Profile sheet: computeStats(), renderProfile(), settings (name, language, theme), delete all.
-"use strict";
+
+import { $ } from "./dom.js";
+import { tr } from "./starter.js";
+import { KEY, esc, lang, program, replaceState, save, state, t } from "./state.js";
+import { addDays, fmtLong, fmtNum, mondayOfIsoWeek, thisMonday, weekKey } from "./dates.js";
+import { bestSet, filled, num, setsOf } from "./data.js";
+import { editing, render, toast } from "./render.js";
+import { openProgress } from "./progress.js";
+import { openWelcome, setLang } from "./welcome.js";
+import { renderAchievements } from "./achievements.js";
+import { storageProtected } from "./offline.js";
 
 // ======================================================================
 // Profile
 // ======================================================================
-function allSessionRecords() {
+export function allSessionRecords() {
   const out = [];
   Object.keys(state.weeks).sort().forEach(wk => {
     const m = /^(\d{4})-W(\d{2})$/.exec(wk); if (!m) return;
@@ -13,12 +23,12 @@ function allSessionRecords() {
   });
   return out;
 }
-function hasActivity(s) {
+export function hasActivity(s) {
   if (!s) return false;
   if (s.done || Object.values(s.ex || {}).some(Boolean)) return true;
   return Object.keys(s.sets || {}).some(k => filled(s.sets[k]).length) || Object.values(s.w || {}).some(v => String(v || "").trim());
 }
-function computeStats() {
+export function computeStats() {
   const recs = allSessionRecords();
   const byId = {}; program().forEach(s => { byId[s.id] = s; });
   const thisKey = weekKey(thisMonday);
@@ -57,7 +67,7 @@ function computeStats() {
   return { workouts, workoutsWeek, sets, setsWeek, volume, firstDate, current, best, records };
 }
 
-function renderProfile() {
+export function renderProfile() {
   const name = state.name || "";
   $("prAvatar").textContent = name ? name.trim().charAt(0).toUpperCase() : "👤";
   $("prName").textContent = name || t("profile");
@@ -83,7 +93,7 @@ function renderProfile() {
     row.querySelector(".rn small").textContent = fmtLong(r.date);
     row.querySelector(".rv").innerHTML = esc(fmtNum(r.w) + " " + t("kg")) + (String(r.set.r || "").trim() ? '<small>× ' + esc(String(r.set.r).trim()) + " " + esc(t("reps")) + '</small>' : "");
     row.style.cursor = "pointer";
-    row.addEventListener("click", () => { closeProfile(); pExId = r.id; openProgress(null); });
+    row.addEventListener("click", () => { closeProfile(); openProgress(null, r.id); });
     recEl.appendChild(row);
   });
 
@@ -99,27 +109,32 @@ function renderProfile() {
   let th = "auto"; try { th = localStorage.getItem("gymtracker.theme") || "auto"; } catch (e) {}
   [...$("prTheme").children].forEach(b => b.classList.toggle("on", b.dataset.v === th));
 }
-function openProfile() { renderProfile(); $("profile").classList.add("show"); document.body.classList.add("modal-open"); }
-function closeProfile() { $("profile").classList.remove("show"); document.body.classList.remove("modal-open"); }
-$("profileBtn").addEventListener("click", openProfile);
-$("hello").addEventListener("click", openProfile);
-$("prClose").addEventListener("click", closeProfile);
-$("profile").addEventListener("click", e => { if (e.target === $("profile")) closeProfile(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show") && !$("achModal").classList.contains("show") && !$("achSheet").classList.contains("show")) closeProfile(); });
-$("prNameSave").addEventListener("click", () => {
-  const v = $("prNameInput").value.trim(); if (!v) { $("prNameInput").focus(); return; }
-  state.name = v; save(); render(); renderProfile(); toast(t("nameSaved"));
-});
-$("prNameInput").addEventListener("keydown", e => { if (e.key === "Enter") $("prNameSave").click(); });
-$("prLang").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) setLang(b.dataset.v); });
-function applyTheme(v) {
+export function openProfile() { renderProfile(); $("profile").classList.add("show"); document.body.classList.add("modal-open"); }
+export function closeProfile() { $("profile").classList.remove("show"); document.body.classList.remove("modal-open"); }
+
+export function applyTheme(v) {
   if (v === "auto") { document.documentElement.removeAttribute("data-theme"); try { localStorage.removeItem("gymtracker.theme"); } catch (e) {} }
   else { document.documentElement.setAttribute("data-theme", v); try { localStorage.setItem("gymtracker.theme", v); } catch (e) {} }
 }
-$("prTheme").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) { applyTheme(b.dataset.v); renderProfile(); } });
-$("prGuide").addEventListener("click", () => { closeProfile(); openWelcome("guide"); });
-$("wipeBtn").addEventListener("click", () => {
-  if (!confirm(t("wipeConfirm"))) return;
-  try { localStorage.removeItem(KEY); } catch (e) {}
-  state = { weeks: {} }; editing.clear(); closeProfile(); render(); openWelcome("first");
-});
+
+// Runs once at startup (called from main.js): connects buttons and other page events.
+export function init() {
+  $("profileBtn").addEventListener("click", openProfile);
+  $("hello").addEventListener("click", openProfile);
+  $("prClose").addEventListener("click", closeProfile);
+  $("profile").addEventListener("click", e => { if (e.target === $("profile")) closeProfile(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show") && !$("achModal").classList.contains("show") && !$("achSheet").classList.contains("show")) closeProfile(); });
+  $("prNameSave").addEventListener("click", () => {
+    const v = $("prNameInput").value.trim(); if (!v) { $("prNameInput").focus(); return; }
+    state.name = v; save(); render(); renderProfile(); toast(t("nameSaved"));
+  });
+  $("prNameInput").addEventListener("keydown", e => { if (e.key === "Enter") $("prNameSave").click(); });
+  $("prLang").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) setLang(b.dataset.v); });
+  $("prTheme").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) { applyTheme(b.dataset.v); renderProfile(); } });
+  $("prGuide").addEventListener("click", () => { closeProfile(); openWelcome("guide"); });
+  $("wipeBtn").addEventListener("click", () => {
+    if (!confirm(t("wipeConfirm"))) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    replaceState({}); editing.clear(); closeProfile(); render(); openWelcome("first");
+  });
+}

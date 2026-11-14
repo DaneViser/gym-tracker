@@ -1,0 +1,13 @@
+{
+  "name": "gym-tracker",
+  "private": true,
+  "description": "Phone-first weekly gym tracker. No build step: the files in this repo are served as-is by GitHub Pages.",
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/serve.js",
+    "check": "node tools/check.js",
+    "e2e": "node tools/e2e.js",
+    "test": "node tools/check.js && node tools/e2e.js"
+  },
+  "engines": { "node": ">=20" }
+}

@@ -1,0 +1,27 @@
+# Runs on every push and pull request. A red ✗ on GitHub means something is broken — see the log.
+#  - tools/check.js : modules load, texts in both languages, ids, badges, offline file list, version bump, unit tests
+#  - tools/e2e.js   : clicks through the real app in headless Chrome (phone size), incl. broken-data scenarios
+name: checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # needed to compare with the previous commit (version-bump check)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Static checks and unit tests
+        run: node tools/check.js
+        env:
+          CI: "true"
+          CHECK_BASE: ${{ github.event.before }}
+      - name: Browser tests (headless Chrome)
+        run: node tools/e2e.js

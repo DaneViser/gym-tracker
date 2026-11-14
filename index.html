@@ -246,22 +246,7 @@
   </div>
 </div>
 
-<!-- Scripts: plain JS, one file per feature, loaded in this order (main.js last). See AGENTS.md. -->
-<script src="js/version.js"></script>
-<script src="js/i18n.js"></script>
-<script src="js/starter.js"></script>
-<script src="js/state.js"></script>
-<script src="js/dates.js"></script>
-<script src="js/data.js"></script>
-<script src="js/render.js"></script>
-<script src="js/timer.js"></script>
-<script src="js/progress.js"></script>
-<script src="js/welcome.js"></script>
-<script src="js/profile.js"></script>
-<script src="js/controls.js"></script>
-<script src="js/achievements.js"></script>
-<script src="js/clock.js"></script>
-<script src="js/offline.js"></script>
-<script src="js/main.js"></script>
+<!-- Scripts: ES modules. main.js imports everything else (see AGENTS.md). -->
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -1,24 +1,34 @@
 // Main screen: render(), workout cards, exercise rows, sets panel, edit mode, history squares,
 // '+ Add workout', toast/vibration, swipe between weeks.
-"use strict";
+
+import { $ } from "./dom.js";
+import { setsWord } from "./i18n.js";
+import { tr } from "./starter.js";
+import { esc, lang, program, save, sorted, state, t, uid } from "./state.js";
+import { addDays, fmtShort, isoWeek, sameDay, setViewMonday, thisMonday, today, viewMonday, weekKey } from "./dates.js";
+import { bestSet, doneCount, filled, lastSets, plannedCount, sessionData, setsOf, setsText, weekData } from "./data.js";
+import { timerBusy } from "./timer.js";
+import { openProgress } from "./progress.js";
+import { renderNag } from "./controls.js";
+import { checkPR, liftOf } from "./achievements.js";
 
 // ======================================================================
 // Render
 // ======================================================================
-const $ = id => document.getElementById(id);
-const openState = {}, openSets = {};
-const editing = new Set();
 
-function applyStatic() {
+export const openState = {}, openSets = {};
+export const editing = new Set();
+
+export function applyStatic() {
   document.documentElement.lang = lang === "sr" ? "sr-Latn" : "en";
   document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); el.title = t(el.dataset.i18nAria); });
   [...$("langSeg").children].forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
-  if (!tTick && !timerEl.classList.contains("finished")) $("tlabel").textContent = t("rest");
+  if (!timerBusy()) $("tlabel").textContent = t("rest");
 }
 
-function render() {
+export function render() {
   const key = weekKey(viewMonday), w = isoWeek(viewMonday), isThisWeek = sameDay(viewMonday, thisMonday);
   $("hello").textContent = state.name ? t("hello", { name: state.name }) : "";
   $("avatarInitial").textContent = state.name ? state.name.trim().charAt(0).toUpperCase() : "👤";
@@ -38,7 +48,7 @@ function render() {
   sorted().forEach(sess => container.appendChild(renderSession(sess, key, isThisWeek, todayDow)));
 }
 
-function renderSession(sess, key, isThisWeek, todayDow) {
+export function renderSession(sess, key, isThisWeek, todayDow) {
   const sd = sessionData(key, sess.id, false);
   const D = t("days");
   const hasAlt = sess.altDow != null && sess.altDow !== sess.dow;
@@ -88,14 +98,14 @@ function renderSession(sess, key, isThisWeek, todayDow) {
   return el;
 }
 
-function maybeCompleteSession(key, sess) {
+export function maybeCompleteSession(key, sess) {
   const s = sessionData(key, sess.id, true);
   const req = sess.ex.filter(x => !x.optional);
   if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; toast(t("toastDone")); return true; }
   return false;
 }
 
-function renderTrackBody(body, sess, key, sd) {
+export function renderTrackBody(body, sess, key, sd) {
   if (!sess.ex.length) {
     const empty = document.createElement("div"); empty.className = "empty-ex"; empty.textContent = t("noExercises"); body.appendChild(empty);
   }
@@ -166,7 +176,7 @@ function renderTrackBody(body, sess, key, sd) {
   body.appendChild(foot);
 }
 
-function renderSetsPanel(sess, ex, key, last, updateBtn, wrap) {
+export function renderSetsPanel(sess, ex, key, last, updateBtn, wrap) {
   const panel = document.createElement("div");
   panel.className = "sets-panel";
   const sd = sessionData(key, sess.id, false);
@@ -258,13 +268,13 @@ function renderSetsPanel(sess, ex, key, last, updateBtn, wrap) {
   return panel;
 }
 
-function daySelect(value, withNone) {
+export function daySelect(value, withNone) {
   let h = withNone ? '<option value="">' + esc(t("noOtherDay")) + '</option>' : "";
   t("daysLong").forEach((d, i) => { h += '<option value="' + i + '"' + (value === i ? " selected" : "") + '>' + esc(d) + '</option>'; });
   return h;
 }
 
-function renderEditBody(body, sess) {
+export function renderEditBody(body, sess) {
   const headEl = document.createElement("div");
   headEl.className = "edit-head";
   headEl.innerHTML =
@@ -340,9 +350,9 @@ function renderEditBody(body, sess) {
   });
   body.appendChild(foot);
 }
-function move(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
+export function move(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; }
 
-function renderHistory(curKey) {
+export function renderHistory(curKey) {
   const h = $("history");
   h.innerHTML = '<span class="hlabel"></span>';
   h.firstChild.textContent = t("last8");
@@ -355,37 +365,40 @@ function renderHistory(curKey) {
     b.className = "wk" + lvl + (k === curKey ? " cur" : "");
     b.textContent = n || "";
     b.title = t("weekTip", { w: isoWeek(m).week, n, t: total });
-    b.addEventListener("click", () => { viewMonday = m; render(); });
+    b.addEventListener("click", () => { setViewMonday(m); render(); });
     h.appendChild(b);
   }
 }
 
-$("addWorkout").addEventListener("click", () => {
-  if (!Array.isArray(state.program)) state.program = [];
-  const used = new Set(program().map(s => s.dow));
-  let dow = (today.getDay() + 6) % 7;
-  for (let i = 0; i < 7 && used.has(dow); i++) dow = (dow + 1) % 7;
-  const sess = { id: uid("w"), dow, altDow: null, title: "", sub: "", ex: [{ id: uid("ex"), name: "", sets: "" }] };
-  state.program.push(sess); editing.add(sess.id); save(); render();
-  const el = document.querySelector('.session[data-sid="' + sess.id + '"]');
-  if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); const ti = el.querySelector('[data-f="title"]'); if (ti) ti.focus({ preventScroll: true }); }
-});
-
-function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
-let toastTimer;
-function toast(msg) {
+export function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+export let toastTimer;
+export function toast(msg) {
   buzz([40, 60, 40]);
   const el = $("toast"); el.textContent = msg; el.classList.add("show");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
 
 // Swipe between weeks
-let sx = 0, sy = 0, st0 = 0;
-[document.querySelector(".weekbar"), $("sessions")].forEach(z => {
-  z.addEventListener("touchstart", e => { const p = e.touches[0]; sx = p.clientX; sy = p.clientY; st0 = Date.now(); }, { passive: true });
-  z.addEventListener("touchend", e => {
-    if (e.target.closest("input, select, textarea, .edit-head, .ex-edit, .sets-panel")) return;
-    const p = e.changedTouches[0], dx = p.clientX - sx, dy = p.clientY - sy;
-    if (Date.now() - st0 < 600 && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) { viewMonday = addDays(viewMonday, dx < 0 ? 7 : -7); buzz(10); render(); }
-  }, { passive: true });
-});
+export let sx = 0, sy = 0, st0 = 0;
+
+// Runs once at startup (called from main.js): connects buttons and other page events.
+export function init() {
+  $("addWorkout").addEventListener("click", () => {
+    if (!Array.isArray(state.program)) state.program = [];
+    const used = new Set(program().map(s => s.dow));
+    let dow = (today.getDay() + 6) % 7;
+    for (let i = 0; i < 7 && used.has(dow); i++) dow = (dow + 1) % 7;
+    const sess = { id: uid("w"), dow, altDow: null, title: "", sub: "", ex: [{ id: uid("ex"), name: "", sets: "" }] };
+    state.program.push(sess); editing.add(sess.id); save(); render();
+    const el = document.querySelector('.session[data-sid="' + sess.id + '"]');
+    if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); const ti = el.querySelector('[data-f="title"]'); if (ti) ti.focus({ preventScroll: true }); }
+  });
+  [document.querySelector(".weekbar"), $("sessions")].forEach(z => {
+    z.addEventListener("touchstart", e => { const p = e.touches[0]; sx = p.clientX; sy = p.clientY; st0 = Date.now(); }, { passive: true });
+    z.addEventListener("touchend", e => {
+      if (e.target.closest("input, select, textarea, .edit-head, .ex-edit, .sets-panel")) return;
+      const p = e.changedTouches[0], dx = p.clientX - sx, dy = p.clientY - sy;
+      if (Date.now() - st0 < 600 && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) { setViewMonday(addDays(viewMonday, dx < 0 ? 7 : -7)); buzz(10); render(); }
+    }, { passive: true });
+  });
+}
