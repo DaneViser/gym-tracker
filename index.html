@@ -282,6 +282,45 @@
   .hist-table td.w { color: var(--muted); }
   .p-close { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 18px; cursor: pointer; flex: none; }
 
+  /* profile */
+  .avatar-btn { padding: 0; }
+  .avatar-btn span { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 800; }
+  .pr-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .pr-id h2 { margin: 0; font-size: 21px; overflow-wrap: anywhere; }
+  .pr-id small { color: var(--muted); font-size: 13px; }
+  .avatar { width: 52px; height: 52px; flex: none; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
+  .pr-stats { grid-template-columns: repeat(2, 1fr); }
+  .pr-stats .stat b { font-size: 22px; }
+  .pr-stats .stat .sub { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .pr-fun { margin: -4px 0 6px; color: var(--muted); font-size: 13.5px; text-align: center; min-height: 1px; }
+  .pr-h { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 22px 0 8px; }
+  .pr-list { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .pr-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; min-height: 56px;
+    border-bottom: 1px solid var(--line); width: 100%; background: transparent; color: var(--text); font: inherit; text-align: left;
+  }
+  .pr-row:last-child { border-bottom: 0; }
+  .pr-row > span:first-child { font-weight: 600; }
+  .pr-row b { display: block; font-weight: 600; }
+  .pr-row small { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; }
+  .pr-btn { cursor: pointer; }
+  .pr-btn:hover { background: var(--surface-2); }
+  .pr-btn.danger b { color: var(--danger); }
+  .chev-r { color: var(--muted); font-size: 22px; line-height: 1; }
+  .pr-inline { display: flex; gap: 8px; flex: 1; max-width: 260px; }
+  .pr-inline .txt { min-width: 0; }
+  .pr-inline .pill { height: 44px; }
+  .rec { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+  .rec:last-child { border-bottom: 0; }
+  .rec .medal { width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 16px; }
+  .rec .rn { flex: 1; min-width: 0; }
+  .rec .rn b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+  .rec .rn small { color: var(--muted); font-size: 12.5px; }
+  .rec .rv { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rec .rv small { display: block; font-weight: 500; color: var(--muted); font-size: 12px; }
+  .rec-empty { color: var(--muted); font-size: 14px; padding: 6px 2px; }
+  @media (max-width: 420px) { .pr-row { flex-wrap: wrap; } .pr-inline { max-width: none; flex-basis: 100%; } }
+
   .timer {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
     background: color-mix(in srgb, var(--surface) 92%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
@@ -330,8 +369,7 @@
     <div class="btns">
       <button class="icon-btn" id="progressBtn" data-i18n-aria="progress">📈</button>
       <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
-      <button class="icon-btn lang" id="langBtn" data-i18n-aria="language">SR</button>
-      <button class="icon-btn" id="themeBtn" data-i18n-aria="theme">◐</button>
+      <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial">👤</span></button>
     </div>
   </header>
 
@@ -367,11 +405,6 @@
 
   <div class="tools">
     <button class="icon-btn" id="todayBtn" data-i18n="jumpWeek"></button>
-    <button class="icon-btn" id="nameBtn" data-i18n="changeName"></button>
-    <button class="icon-btn" id="templateBtn" data-i18n="loadStarter"></button>
-    <button class="icon-btn" id="exportBtn" data-i18n="backup"></button>
-    <button class="icon-btn" id="importBtn" data-i18n="restore"></button>
-    <input type="file" id="importFile" accept="application/json,.json" hidden>
   </div>
   <p class="note" data-i18n="footNote"></p>
 </div>
@@ -400,6 +433,49 @@
     </div>
     <label class="field"><span data-i18n="exercise"></span><select class="sel" id="pSelect"></select></label>
     <div id="pBody"></div>
+  </div>
+</div>
+
+<!-- Profile -->
+<div class="modal" id="profile" role="dialog" aria-modal="true" aria-labelledby="prName">
+  <div class="sheet tall">
+    <div class="p-top">
+      <div class="pr-id">
+        <div class="avatar" id="prAvatar"></div>
+        <div><h2 id="prName"></h2><small id="prSince"></small></div>
+      </div>
+      <button class="p-close" id="prClose" type="button" data-i18n-aria="close">✕</button>
+    </div>
+
+    <div class="stats pr-stats" id="prStats"></div>
+    <p class="pr-fun" id="prFun"></p>
+
+    <h3 class="pr-h" data-i18n="records"></h3>
+    <div id="prRecords"></div>
+
+    <h3 class="pr-h" data-i18n="settings"></h3>
+    <div class="pr-list">
+      <label class="pr-row"><span data-i18n="nameField"></span>
+        <span class="pr-inline"><input class="txt" id="prNameInput" type="text" maxlength="30" autocomplete="given-name"><button class="pill" id="prNameSave" type="button" data-i18n="save"></button></span>
+      </label>
+      <div class="pr-row"><span data-i18n="language"></span>
+        <div class="seg" id="prLang"><button type="button" data-v="en">English</button><button type="button" data-v="sr">Srpski</button></div>
+      </div>
+      <div class="pr-row"><span data-i18n="themeLbl"></span>
+        <div class="seg" id="prTheme"><button type="button" data-v="auto" data-i18n="themeAuto"></button><button type="button" data-v="light" data-i18n="themeLight"></button><button type="button" data-v="dark" data-i18n="themeDark"></button></div>
+      </div>
+      <button class="pr-row pr-btn" id="prGuide" type="button"><span data-i18n="howTo"></span><span class="chev-r">›</span></button>
+    </div>
+
+    <h3 class="pr-h" data-i18n="dataTitle"></h3>
+    <div class="pr-list">
+      <button class="pr-row pr-btn" id="exportBtn" type="button"><span><b data-i18n="backup"></b><small data-i18n="backupD"></small></span><span class="chev-r">›</span></button>
+      <button class="pr-row pr-btn" id="importBtn" type="button"><span><b data-i18n="restore"></b><small data-i18n="restoreD"></small></span><span class="chev-r">›</span></button>
+      <button class="pr-row pr-btn" id="templateBtn" type="button"><span><b data-i18n="loadStarter"></b><small data-i18n="loadStarterD"></small></span><span class="chev-r">›</span></button>
+      <button class="pr-row pr-btn danger" id="wipeBtn" type="button"><span><b data-i18n="wipe"></b><small data-i18n="wipeD"></small></span><span class="chev-r">›</span></button>
+    </div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <p class="note" data-i18n="localNote"></p>
   </div>
 </div>
 
@@ -484,7 +560,7 @@
       toastDone: "Workout done 💪", nameSaved: "Name saved", starterLoaded: "Starter program loaded", restored: "Backup restored",
       rest: "Rest", tapStop: "Tap again to stop", go: "Go!",
       jumpWeek: "Jump to this week", changeName: "Change name", loadStarter: "Load starter program", backup: "Back up data", restore: "Restore backup",
-      footNote: "Everything is saved on this phone only. Swipe left or right to change weeks. Use “Back up data” now and then to keep a copy.",
+      footNote: "Everything is saved on this phone only. Swipe left or right to change weeks. Backups and settings are in your profile (top right).",
       replaceConfirm: "Replace your current workouts with the starter program? Your ticks and sets for matching exercises are kept.",
       restoreConfirm: "Replace current data with this backup?", badBackup: "That file doesn't look like a Gym Tracker backup.",
       installTitle: "📱 Put it on your home screen", installLead: "It then opens like an app, full screen, without the browser bar.",
@@ -505,7 +581,7 @@
       how3: "<b>Log your sets</b><span class=\"d\">Tap the box next to an exercise to write weight × reps for each set. Last time's numbers show in grey. Tap 📈 for your progress chart.</span>",
       how4: "<b>Make it yours</b><span class=\"d\">Tap <b>Edit</b> inside a workout to change exercises and days, or <b>+ Add workout</b> for a new one.</span>",
       how5: "<b>Rest timer &amp; weeks</b><span class=\"d\">Rest timer is at the bottom. Swipe left or right to change week.</span>",
-      how6: "<b>Saved on this phone</b><span class=\"d\">Use <b>Back up data</b> at the bottom now and then, in case you clear your browser.</span>",
+      how6: "<b>Saved on this phone</b><span class=\"d\">Tap your profile circle (top right) for stats, records, settings and <b>Back up data</b>. Back up now and then, in case you clear your browser.</span>",
       progressTitle: "📈 Progress", exercise: "Exercise", noDataYet: " (no data yet)",
       nothing: "<b>Nothing to show yet</b>Add a workout with exercises first.",
       noLogs: "<b>Nothing logged yet</b>Log your sets for this exercise. After a couple of weeks you'll see your line climb here.",
@@ -513,7 +589,19 @@
       hintOne: "One week logged so far. Log a few more weeks to see a trend.",
       hintMany: "Each point is your best set that week. Tap or drag on the chart for details.",
       date: "Date", workout: "Workout", weight: "Weight", repsCol: "Reps", bestOf: "best of {n}", deletedWorkout: "Deleted workout",
-      chartAria: "{metric} over time, {n} weeks, latest {v}"
+      chartAria: "{metric} over time, {n} weeks, latest {v}",
+      profile: "Profile", records: "Personal records", settings: "Settings", nameField: "Name",
+      themeLbl: "Theme", themeAuto: "Auto", themeLight: "Light", themeDark: "Dark", dataTitle: "Your data",
+      backupD: "Download a file with all your workouts and sets", restoreD: "Load a backup file, e.g. on a new phone",
+      loadStarterD: "Replace your workouts with the 4-day starter plan",
+      wipe: "Delete all data", wipeD: "Start over on this phone. Can't be undone.",
+      wipeConfirm: "Delete all workouts, sets and your name from this phone? This can't be undone. Tip: back up first.",
+      localNote: "Everything is stored only on this phone, in this browser.",
+      since: "Training since {d}", noSince: "Your first workout is waiting",
+      stWorkouts: "Workouts done", stWorkoutsSub: "{n} this week", stStreak: "Week streak", stStreakSub: "best: {n}",
+      stSets: "Sets logged", stSetsSub: "{n} this week", stVolume: "Total lifted", stVolumeSub: "weight × reps, all sets",
+      funCars: "That's about {n} cars 🚗", funStart: "Keep going, the first tonne is close 💪",
+      recordsEmpty: "Log weights in your sets and your best lifts show up here."
     },
     sr: {
       days: ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"],
@@ -540,7 +628,7 @@
       toastDone: "Trening završen 💪", nameSaved: "Ime sačuvano", starterLoaded: "Početni program učitan", restored: "Kopija vraćena",
       rest: "Odmor", tapStop: "Dodirni opet za stop", go: "Kreni!",
       jumpWeek: "Idi na ovu nedelju", changeName: "Promeni ime", loadStarter: "Učitaj početni program", backup: "Sačuvaj kopiju", restore: "Vrati kopiju",
-      footNote: "Sve se čuva samo na ovom telefonu. Prevuci levo ili desno da promeniš nedelju. Povremeno dodirni „Sačuvaj kopiju“ da imaš rezervu.",
+      footNote: "Sve se čuva samo na ovom telefonu. Prevuci levo ili desno da promeniš nedelju. Kopije i podešavanja su u tvom profilu (gore desno).",
       replaceConfirm: "Zameniti tvoje treninge početnim programom? Čekiranja i serije za iste vežbe ostaju.",
       restoreConfirm: "Zameniti trenutne podatke ovom kopijom?", badBackup: "Ovaj fajl ne izgleda kao Gym Tracker kopija.",
       installTitle: "📱 Dodaj na početni ekran", installLead: "Onda se otvara kao aplikacija, preko celog ekrana, bez trake pretraživača.",
@@ -561,7 +649,7 @@
       how3: "<b>Upiši serije</b><span class=\"d\">Dodirni polje pored vežbe i upiši težinu × ponavljanja za svaku seriju. Brojevi od prošlog puta su sivi. Dodirni 📈 za grafikon napretka.</span>",
       how4: "<b>Prilagodi sebi</b><span class=\"d\">Dodirni <b>Izmeni</b> u treningu da promeniš vežbe i dane, ili <b>+ Dodaj trening</b> za novi.</span>",
       how5: "<b>Tajmer za odmor i nedelje</b><span class=\"d\">Tajmer je na dnu. Prevuci levo ili desno da promeniš nedelju.</span>",
-      how6: "<b>Čuva se na telefonu</b><span class=\"d\">Povremeno dodirni <b>Sačuvaj kopiju</b> na dnu, za slučaj da obrišeš podatke pretraživača.</span>",
+      how6: "<b>Čuva se na telefonu</b><span class=\"d\">Dodirni krug profila (gore desno) za statistiku, rekorde, podešavanja i <b>Sačuvaj kopiju</b>. Povremeno sačuvaj kopiju, za slučaj da obrišeš podatke pretraživača.</span>",
       progressTitle: "📈 Napredak", exercise: "Vežba", noDataYet: " (još nema podataka)",
       nothing: "<b>Još nema šta da se prikaže</b>Prvo dodaj trening sa vežbama.",
       noLogs: "<b>Još ništa nije upisano</b>Upiši serije za ovu vežbu. Posle par nedelja ovde ćeš videti kako napreduješ.",
@@ -569,7 +657,19 @@
       hintOne: "Upisana je samo jedna nedelja. Upiši još par nedelja da vidiš trend.",
       hintMany: "Svaka tačka je tvoja najbolja serija te nedelje. Dodirni ili prevuci po grafikonu za detalje.",
       date: "Datum", workout: "Trening", weight: "Težina", repsCol: "Ponavljanja", bestOf: "najbolje od {n}", deletedWorkout: "Obrisan trening",
-      chartAria: "{metric} kroz vreme, {n} nedelja, poslednje {v}"
+      chartAria: "{metric} kroz vreme, {n} nedelja, poslednje {v}",
+      profile: "Profil", records: "Lični rekordi", settings: "Podešavanja", nameField: "Ime",
+      themeLbl: "Tema", themeAuto: "Auto", themeLight: "Svetla", themeDark: "Tamna", dataTitle: "Tvoji podaci",
+      backupD: "Preuzmi fajl sa svim treninzima i serijama", restoreD: "Učitaj fajl kopije, npr. na novom telefonu",
+      loadStarterD: "Zameni svoje treninge početnim planom od 4 dana",
+      wipe: "Obriši sve podatke", wipeD: "Kreni ispočetka na ovom telefonu. Ne može se vratiti.",
+      wipeConfirm: "Obrisati sve treninge, serije i ime sa ovog telefona? Ovo se ne može vratiti. Savet: prvo sačuvaj kopiju.",
+      localNote: "Sve se čuva samo na ovom telefonu, u ovom pretraživaču.",
+      since: "Trenira od {d}", noSince: "Tvoj prvi trening te čeka",
+      stWorkouts: "Završenih treninga", stWorkoutsSub: "{n} ove nedelje", stStreak: "Nedelja zaredom", stStreakSub: "najbolje: {n}",
+      stSets: "Upisanih serija", stSetsSub: "{n} ove nedelje", stVolume: "Ukupno podignuto", stVolumeSub: "težina × ponavljanja, sve serije",
+      funCars: "To je otprilike {n} automobila 🚗", funStart: "Samo nastavi, prva tona je blizu 💪",
+      recordsEmpty: "Upiši težine u serije i ovde će se pojaviti tvoja najbolja dizanja."
     }
   };
   function setsWord(n) {
@@ -752,7 +852,6 @@
     document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.dataset.i18n); });
     document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
     document.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); el.title = t(el.dataset.i18nAria); });
-    $("langBtn").textContent = lang === "sr" ? "EN" : "SR";
     [...$("langSeg").children].forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
     if (!tTick && !timerEl.classList.contains("finished")) $("tlabel").textContent = t("rest");
   }
@@ -760,6 +859,7 @@
   function render() {
     const key = weekKey(viewMonday), w = isoWeek(viewMonday), isThisWeek = sameDay(viewMonday, thisMonday);
     $("hello").textContent = state.name ? t("hello", { name: state.name }) : "";
+    $("avatarInitial").textContent = state.name ? state.name.trim().charAt(0).toUpperCase() : "👤";
     $("wkTitle").textContent = isThisWeek ? t("thisWeek", { w: w.week }) : t("weekOf", { w: w.week, y: w.year });
     $("wkRange").textContent = fmtShort(viewMonday) + " – " + fmtShort(addDays(viewMonday, 6));
     const total = program().length, n = doneCount(key);
@@ -1375,27 +1475,136 @@
     applyStatic(); render();
     if ($("welcome").classList.contains("show")) welcomeTexts();
     if ($("progress").classList.contains("show")) openProgress(null);
+    if ($("profile").classList.contains("show")) renderProfile();
   }
-  $("langBtn").addEventListener("click", () => setLang(lang === "sr" ? "en" : "sr"));
   $("langSeg").addEventListener("click", e => { const b = e.target.closest("button[data-lang]"); if (b) setLang(b.dataset.lang); });
+
+  // ======================================================================
+  // Profile
+  // ======================================================================
+  function allSessionRecords() {
+    const out = [];
+    Object.keys(state.weeks).sort().forEach(wk => {
+      const m = /^(\d{4})-W(\d{2})$/.exec(wk); if (!m) return;
+      const monday = mondayOfIsoWeek(+m[1], +m[2]);
+      for (const sid in state.weeks[wk]) out.push({ wk, monday, sid, s: state.weeks[wk][sid] });
+    });
+    return out;
+  }
+  function hasActivity(s) {
+    if (!s) return false;
+    if (s.done || Object.values(s.ex || {}).some(Boolean)) return true;
+    return Object.keys(s.sets || {}).some(k => filled(s.sets[k]).length) || Object.values(s.w || {}).some(v => String(v || "").trim());
+  }
+  function computeStats() {
+    const recs = allSessionRecords();
+    const byId = {}; program().forEach(s => { byId[s.id] = s; });
+    const thisKey = weekKey(thisMonday);
+    let workouts = 0, workoutsWeek = 0, sets = 0, setsWeek = 0, volume = 0, firstDate = null;
+    const doneWeeks = new Set();
+    const exSeen = {}; // exercise id -> name (from program, or anything with data)
+    program().forEach(s => s.ex.forEach(e => { if (!exSeen[e.id] && e.name) exSeen[e.id] = tr("e", e.id, "name", e.name); }));
+    const prs = {};
+    recs.forEach(({ wk, monday, sid, s }) => {
+      if (!s) return;
+      if (hasActivity(s) && (!firstDate || monday < firstDate)) firstDate = monday;
+      if (s.done) { workouts++; doneWeeks.add(wk); if (wk === thisKey) workoutsWeek++; }
+      const ids = new Set([...Object.keys(s.sets || {}), ...Object.keys(s.w || {})]);
+      ids.forEach(exId => {
+        const st = filled(setsOf(s, exId));
+        sets += st.length; if (wk === thisKey) setsWeek += st.length;
+        st.forEach(x => { const w = num(x.w), r = num(x.r); if (w != null && r != null && w > 0 && r > 0) volume += w * r; });
+        const b = bestSet(st);
+        if (b && num(b.w) != null && exSeen[exId]) {
+          const w = num(b.w), cur = prs[exId];
+          const date = addDays(monday, byId[sid] ? byId[sid].dow : 0);
+          if (!cur || w > cur.w || (w === cur.w && (num(b.r) || 0) > (num(cur.set.r) || 0))) prs[exId] = { id: exId, w, set: b, date, name: exSeen[exId] };
+        }
+      });
+    });
+    // Week streaks: consecutive weeks with at least one finished workout.
+    let best = 0, run = 0, prev = null;
+    [...doneWeeks].sort().forEach(k => {
+      const m = /^(\d{4})-W(\d{2})$/.exec(k), mon = mondayOfIsoWeek(+m[1], +m[2]);
+      run = prev && Math.round((mon - prev) / 864e5) === 7 ? run + 1 : 1;
+      best = Math.max(best, run); prev = mon;
+    });
+    let current = 0, wkMon = doneWeeks.has(thisKey) ? thisMonday : addDays(thisMonday, -7);
+    while (doneWeeks.has(weekKey(wkMon))) { current++; wkMon = addDays(wkMon, -7); }
+    const records = Object.values(prs).sort((a, b) => b.w - a.w).slice(0, 8);
+    return { workouts, workoutsWeek, sets, setsWeek, volume, firstDate, current, best, records };
+  }
+
+  function renderProfile() {
+    const name = state.name || "";
+    $("prAvatar").textContent = name ? name.trim().charAt(0).toUpperCase() : "👤";
+    $("prName").textContent = name || t("profile");
+    const s = computeStats();
+    $("prSince").textContent = s.firstDate ? t("since", { d: fmtLong(s.firstDate) }) : t("noSince");
+
+    const vol = s.volume >= 1000 ? fmtNum(s.volume / 1000) + " t" : fmtNum(s.volume) + " " + t("kg");
+    const card = (label, value, sub) => '<div class="stat"><small>' + esc(label) + '</small><b>' + esc(value) + '</b><span class="sub">' + esc(sub) + '</span></div>';
+    $("prStats").innerHTML =
+      card(t("stWorkouts"), String(s.workouts), t("stWorkoutsSub", { n: s.workoutsWeek })) +
+      card(t("stStreak"), (s.current ? "🔥 " : "") + s.current, t("stStreakSub", { n: s.best })) +
+      card(t("stSets"), String(s.sets), t("stSetsSub", { n: s.setsWeek })) +
+      card(t("stVolume"), vol, t("stVolumeSub"));
+    $("prFun").textContent = s.volume >= 1500 ? t("funCars", { n: fmtNum(Math.round(s.volume / 1500 * 10) / 10) }) : s.volume > 0 ? t("funStart") : "";
+
+    const recEl = $("prRecords"); recEl.innerHTML = "";
+    if (!s.records.length) { recEl.innerHTML = '<p class="rec-empty"></p>'; recEl.firstChild.textContent = t("recordsEmpty"); }
+    const medals = ["🥇", "🥈", "🥉"];
+    s.records.forEach((r, i) => {
+      const row = document.createElement("div"); row.className = "rec";
+      row.innerHTML = '<span class="medal">' + (medals[i] || "🏅") + '</span><span class="rn"><b></b><small></small></span><span class="rv"></span>';
+      row.querySelector(".rn b").textContent = r.name;
+      row.querySelector(".rn small").textContent = fmtLong(r.date);
+      row.querySelector(".rv").innerHTML = esc(fmtNum(r.w) + " " + t("kg")) + (String(r.set.r || "").trim() ? '<small>× ' + esc(String(r.set.r).trim()) + " " + esc(t("reps")) + '</small>' : "");
+      row.style.cursor = "pointer";
+      row.addEventListener("click", () => { closeProfile(); pExId = r.id; openProgress(null); });
+      recEl.appendChild(row);
+    });
+
+    $("prNameInput").value = name;
+    [...$("prLang").children].forEach(b => b.classList.toggle("on", b.dataset.v === lang));
+    let th = "auto"; try { th = localStorage.getItem("gymtracker.theme") || "auto"; } catch (e) {}
+    [...$("prTheme").children].forEach(b => b.classList.toggle("on", b.dataset.v === th));
+  }
+  function openProfile() { renderProfile(); $("profile").classList.add("show"); document.body.classList.add("modal-open"); }
+  function closeProfile() { $("profile").classList.remove("show"); document.body.classList.remove("modal-open"); }
+  $("profileBtn").addEventListener("click", openProfile);
+  $("hello").addEventListener("click", openProfile);
+  $("prClose").addEventListener("click", closeProfile);
+  $("profile").addEventListener("click", e => { if (e.target === $("profile")) closeProfile(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show")) closeProfile(); });
+  $("prNameSave").addEventListener("click", () => {
+    const v = $("prNameInput").value.trim(); if (!v) { $("prNameInput").focus(); return; }
+    state.name = v; save(); render(); renderProfile(); toast(t("nameSaved"));
+  });
+  $("prNameInput").addEventListener("keydown", e => { if (e.key === "Enter") $("prNameSave").click(); });
+  $("prLang").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) setLang(b.dataset.v); });
+  function applyTheme(v) {
+    if (v === "auto") { document.documentElement.removeAttribute("data-theme"); try { localStorage.removeItem("gymtracker.theme"); } catch (e) {} }
+    else { document.documentElement.setAttribute("data-theme", v); try { localStorage.setItem("gymtracker.theme", v); } catch (e) {} }
+  }
+  $("prTheme").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) { applyTheme(b.dataset.v); renderProfile(); } });
+  $("prGuide").addEventListener("click", () => { closeProfile(); openWelcome("guide"); });
+  $("wipeBtn").addEventListener("click", () => {
+    if (!confirm(t("wipeConfirm"))) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    state = { weeks: {} }; editing.clear(); closeProfile(); render(); openWelcome("first");
+  });
 
   // ======================================================================
   // Controls
   // ======================================================================
   $("helpBtn").addEventListener("click", () => openWelcome("guide"));
-  $("nameBtn").addEventListener("click", () => openWelcome("name"));
   $("prevWk").addEventListener("click", () => { viewMonday = addDays(viewMonday, -7); render(); });
   $("nextWk").addEventListener("click", () => { viewMonday = addDays(viewMonday, 7); render(); });
   $("todayBtn").addEventListener("click", () => { viewMonday = new Date(thisMonday); render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
   $("templateBtn").addEventListener("click", () => {
     if (program().length && !confirm(t("replaceConfirm"))) return;
-    state.program = starterProgram(); editing.clear(); save(); render(); toast(t("starterLoaded"));
-  });
-  $("themeBtn").addEventListener("click", () => {
-    const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    const next = cur === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    try { localStorage.setItem("gymtracker.theme", next); } catch (e) {}
+    state.program = starterProgram(); editing.clear(); save(); render(); renderProfile(); toast(t("starterLoaded"));
   });
   $("exportBtn").addEventListener("click", () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -1416,7 +1625,7 @@
         if (!confirm(t("restoreConfirm"))) return;
         if (!Array.isArray(data.program)) data.program = starterProgram();
         data.onboarded = true; if (!data.name) data.name = state.name;
-        state = data; editing.clear(); save(); render(); toast(t("restored"));
+        state = data; editing.clear(); save(); render(); renderProfile(); toast(t("restored"));
       } catch (err) { alert(t("badBackup")); }
       e.target.value = "";
     };
