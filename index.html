@@ -900,7 +900,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.5";
+  const APP_VERSION = "2026-11-14.6";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -1192,7 +1192,9 @@
     const rowsEl = document.createElement("div");
     panel.appendChild(rowsEl);
     function phW(i) { return (last[i] && String(last[i].w || "").trim()) || (i > 0 && String(cur[i - 1].w || "").trim()) || t("kg"); }
-    function phR(i) { return (last[i] && String(last[i].r || "").trim()) || (i > 0 && String(cur[i - 1].r || "").trim()) || t("reps"); }
+    const timed = liftOf(ex.id) === "plank"; // plank: second box is seconds, not reps
+    const rUnit = timed ? "s" : t("reps");
+    function phR(i) { return (last[i] && String(last[i].r || "").trim()) || (i > 0 && String(cur[i - 1].r || "").trim()) || rUnit; }
     function drawRows() {
       rowsEl.innerHTML = "";
       cur.forEach((x, i) => {
@@ -1205,7 +1207,7 @@
         row.querySelector(".sn").textContent = t("set", { n: i + 1 });
         const [wi, ri] = row.querySelectorAll("input");
         const units = row.querySelectorAll(".unit");
-        units[0].textContent = t("kg"); units[1].textContent = t("reps");
+        units[0].textContent = t("kg"); units[1].textContent = rUnit;
         wi.value = x.w; ri.value = x.r;
         wi.placeholder = phW(i); ri.placeholder = phR(i);
         wi.setAttribute("aria-label", t("set", { n: i + 1 }) + " " + t("weight"));
@@ -1828,6 +1830,8 @@
   // Everything here is DERIVED from state.weeks / state.program, so old history counts.
   // Only state.achSeen (highest tier already celebrated per badge) is stored, so we know what is new.
   const ICONS = {
+    stopwatch: "M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z M14.5 10.5l-2.5 2.5 M17 8l1 -1 M14 3h-4",
+    "arrows-vertical": "M8 7l4 -4l4 4 M8 17l4 4l4 -4 M12 3l0 18",
     "arrow-bar-to-up": "M12 10l0 10 M12 10l4 4 M12 10l-4 4 M4 4l16 0",
     "chevrons-up": "M7 11l5 -5l5 5 M7 17l5 -5l5 5",
     "chevrons-down": "M7 7l5 5l5 -5 M7 13l5 5l5 -5",
@@ -1864,8 +1868,16 @@
     ohp: { inc: /overhead press|\bohp\b|military press|potisak iznad glave|vojnički potisak/i, exc: /machine|mašin|seated|sedeći|sede/i },
     pullups: { inc: /pull.?ups?|chin.?ups?|zgib/i, exc: /assist|asist|band|gum[ae]|negativ|lat|pulldown|mašin|machine/i, reps: true },
     dips: { inc: /\bdips?\b|propadanj|razboj/i, exc: /bench dip|assist|asist|mašin|machine|klup/i, reps: true },
-    farmer: { inc: /farmer|farmersk/i, exc: /^$/ }
+    farmer: { inc: /farmer|farmersk/i, exc: /^$/ },
+    plank: { inc: /plank|izdržaj/i, exc: /side|bočn|reverse|obrnut/i, time: true },
+    pushups: { inc: /push.?ups?|sklek/i, exc: /knee|kolen|incline|kos[aoi]|wall|zid|assist|asist/i, reps: true }
   };
+  // Seconds from "90", "90s" or "1:30".
+  function secs(v) {
+    const s = String(v == null ? "" : v).trim();
+    const m = /^(\d+):(\d{1,2})$/.exec(s);
+    return m ? +m[1] * 60 + +m[2] : num(s);
+  }
   function liftOf(exId) {
     let name = exId;
     program().forEach(s => s.ex.forEach(e => { if (e.id === exId) name += " " + (e.name || ""); }));
@@ -1884,15 +1896,19 @@
     ohp:      { m: [30, 40, 50, 60, 80, 100],    f: [15, 20, 25, 30, 40, 50],    x: [20, 30, 40, 50, 60, 80] },
     pullups:  { m: [1, 5, 10, 15, 20, 25],       f: [1, 3, 5, 8, 12, 15],        x: [1, 3, 5, 10, 15, 20] },
     dips:     { m: [5, 10, 15, 20, 30],          f: [1, 5, 10, 15, 20],          x: [3, 8, 12, 20, 25] },
-    farmer:   { m: [20, 30, 40, 50, 60, 80],     f: [10, 15, 20, 25, 30, 40],    x: [15, 20, 30, 40, 50, 60] }
+    farmer:   { m: [20, 30, 40, 50, 60, 80],     f: [10, 15, 20, 25, 30, 40],    x: [15, 20, 30, 40, 50, 60] },
+    pushups:  { m: [10, 20, 30, 40, 50, 75],     f: [3, 10, 15, 20, 30, 40],     x: [5, 15, 25, 35, 45, 60] },
+    plank:    { x: [30, 60, 90, 120, 180, 300] } // seconds; one ladder for everyone
   };
+  const secTxt = v => v >= 60 ? Math.floor(v / 60) + ":" + String(Math.round(v % 60)).padStart(2, "0") + " min" : fmtNum(v) + " s";
   const ladder = id => M => LADDERS[id][M.sex] || LADDERS[id].x;
   const repsTxt = v => fmtNum(v) + " " + (lang === "en" && v === 1 ? "rep" : t("reps"));
   // Shown on lift badges so people know what to name an exercise for it to count.
   const LIFT_NAMES = {
     bench: "Bench press", squat: ["Squat, Front squat", "Čučanj, Squat"], deadlift: ["Deadlift, Sumo deadlift", "Mrtvo dizanje, Deadlift"],
     ohp: ["Overhead press, Military press", "Potisak iznad glave, Military press"], pullups: ["Pull-ups, Chin-ups", "Zgibovi, Pull-ups"],
-    dips: ["Dips", "Propadanja, Dips"], farmer: ["Farmer's walk / carry", "Farmerski hod, Farmer's walk"]
+    dips: ["Dips", "Propadanja, Dips"], farmer: ["Farmer's walk / carry", "Farmerski hod, Farmer's walk"],
+    plank: ["Plank (not side plank)", "Plank, Izdržaj (ne bočni plank)"], pushups: ["Push-ups", "Sklekovi, Push-ups"]
   };
   const perHandTxt = v => fmtNum(v) + " " + t("kg") + " " + (lang === "sr" ? "po ruci" : "per hand");
 
@@ -1912,6 +1928,8 @@
     { id: "ohp", icon: "arrow-bar-to-up", m: "ohp", tiers: ladder("ohp"), fmt: kgTxt, sexNote: true, title: ["Overhead press", "Potisak iznad glave"], desc: ["Best standing overhead press: {n}", "Najbolji potisak iznad glave iz stajanja: {n}"] },
     { id: "pullups", icon: "chevrons-up", m: "pullups", tiers: ladder("pullups"), fmt: repsTxt, sexNote: true, title: ["Pull-ups", "Zgibovi"], desc: ["Most pull-ups in one set (no assistance): {n}", "Najviše zgibova u jednoj seriji (bez pomoći): {n}"] },
     { id: "dips", icon: "chevrons-down", m: "dips", tiers: ladder("dips"), fmt: repsTxt, sexNote: true, title: ["Dips", "Propadanja"], desc: ["Most dips in one set: {n}", "Najviše propadanja u jednoj seriji: {n}"] },
+    { id: "pushups", icon: "arrows-vertical", m: "pushups", tiers: ladder("pushups"), fmt: repsTxt, sexNote: true, title: ["Push-ups", "Sklekovi"], desc: ["Most push-ups in one set (full push-ups): {n}", "Najviše sklekova u jednoj seriji (pravi sklekovi): {n}"] },
+    { id: "plank", icon: "stopwatch", m: "plank", tiers: ladder("plank"), fmt: secTxt, title: ["Plank", "Plank"], desc: ["Longest plank hold: {n}. Log seconds in the second box (e.g. 60 or 1:30).", "Najduži plank: {n}. Upiši sekunde u drugo polje (npr. 60 ili 1:30)."] },
     { id: "farmer", icon: "walk", m: "farmer", tiers: ladder("farmer"), fmt: perHandTxt, sexNote: true, title: ["Farmer's walk", "Farmerski hod"], desc: ["Heaviest weight carried in one hand: {n}. Log the weight of one hand.", "Najveća težina u jednoj ruci: {n}. Upiši težinu jedne ruke."] },
     { id: "weekend", icon: "sun", m: "weekend", tiers: [1, 5, 10], title: ["Weekend warrior", "Vikend ratnik"], desc: ["Weeks with both Saturday and Sunday done: {n}", "Nedelje sa odrađenom i subotom i nedeljom: {n}"] },
     { id: "comeback", icon: "refresh", m: "comeback", tiers: [1], title: ["Comeback", "Povratak"], desc: ["Train again after 3+ weeks off", "Ponovo treniraj posle 3+ nedelje pauze"] },
@@ -1936,8 +1954,14 @@
         const st2 = filled(setsOf(s, exId));
         if (!(exId in liftCache)) liftCache[exId] = liftOf(exId);
         const l = liftCache[exId];
-        if (l && LIFTS[l].reps) { // bodyweight moves: best reps in one set
-          const r = Math.max(-Infinity, ...st2.map(x => num(x.r)).filter(v => v != null && v > 0));
+        if (l && (LIFTS[l].reps || LIFTS[l].time)) { // bodyweight moves: best reps (or seconds) in one set
+          function read(x) {
+            if (!LIFTS[l].time) return num(x.r);
+            const fromR = secs(x.r);                     // seconds belong in the second box…
+            if (fromR != null) return fromR;
+            return /[:s]/i.test(x.w || "") ? secs(String(x.w).replace(/s$/i, "")) : null; // …but accept "1:30" / "60s" in the first
+          }
+          const r = Math.max(-Infinity, ...st2.map(read).filter(v => v != null && v > 0));
           if (isFinite(r)) lift[l] = Math.max(lift[l], r);
         }
         const w = heaviest(st2);
