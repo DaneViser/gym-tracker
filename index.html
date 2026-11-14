@@ -306,6 +306,9 @@
 
   /* achievements */
   .ach-count { color: var(--accent); font-weight: 800; margin-left: 4px; }
+  .ach-cat { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 2px 10px; font-size: 16px; font-weight: 800; }
+  .ach-cat:first-child { margin-top: 4px; }
+  .ach-cat .ach-count { font-size: 14px; }
   .ach-entry {
     width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 4px;
     background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; color: var(--text); font: inherit; text-align: left; cursor: pointer;
@@ -634,7 +637,7 @@
       <h2 id="achSTitle"><span data-i18n="achTitle"></span> <span class="ach-count" id="achCount"></span></h2>
       <button class="p-close" id="achSClose" type="button" data-i18n-aria="close">✕</button>
     </div>
-    <div class="ach-grid" id="achGrid"></div>
+    <div id="achGrid"></div>
     <p class="note" data-i18n="achFoot"></p>
   </div>
 </div>
@@ -787,6 +790,7 @@
       targetsM: "♂ Men's targets", targetsF: "♀ Women's targets", targetsX: "General targets",
       targetsTip: "Change this in Profile → Settings → Strength milestones.",
       countsAs: "Counts exercises named like: {n}. Assisted, machine and easier variants don't count.",
+      catStrength: "Strength", catHabit: "Consistency",
       achSub: "{a} of {b} unlocked", achFoot: "Tap a badge to see every level and what's left.",
       liftStd: "Levels follow Strength Level's standards (men ~80 kg, women ~60 kg bodyweight): Bronze = Beginner, Silver = Novice, Gold = Intermediate (average lifter), Platinum = Advanced (top 20%), Diamond = Elite (top 5%), Legend = beyond Elite.",
       plankStd: "Based on fitness-test norms: most adults hold 1–1.5 min, 2 min is top 25%, Diamond ≈ top 5%, Legend ≈ top 1%."
@@ -872,6 +876,7 @@
       targetsM: "♂ Ciljevi za muškarce", targetsF: "♀ Ciljevi za žene", targetsX: "Opšti ciljevi",
       targetsTip: "Menja se u Profil → Podešavanja → Ciljevi snage.",
       countsAs: "Računaju se vežbe sa nazivom kao: {n}. Asistirane, mašinske i lakše varijante se ne računaju.",
+      catStrength: "Snaga", catHabit: "Doslednost",
       achSub: "Otključano {a} od {b}", achFoot: "Dodirni dostignuće da vidiš sve nivoe i koliko ti je ostalo.",
       liftStd: "Nivoi prate standarde sajta Strength Level (muškarci ~80 kg, žene ~60 kg telesne težine): Bronza = početnik, Srebro = novajlija, Zlato = srednji nivo (prosečan vežbač), Platina = napredni (top 20%), Dijamant = elita (top 5%), Legenda = iznad elite.",
       plankStd: "Prema normama fitnes testova: većina odraslih izdrži 1–1,5 min, 2 min je top 25%, Dijamant ≈ top 5%, Legenda ≈ top 1%."
@@ -952,7 +957,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.9";
+  const APP_VERSION = "2026-11-14.10";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -2005,6 +2010,8 @@
   // Bump when thresholds change: everyone's "already celebrated" levels are re-recorded silently,
   // so a re-shuffled ladder never fires false pop-ups or swallows real ones.
   const ACH_VERSION = 2;
+  const ACH_CATS = [{ id: "strength", icon: "💪", key: "catStrength" }, { id: "habit", icon: "🔥", key: "catHabit" }];
+  const achCat = a => a.sexNote || a.m === "plank" ? "strength" : "habit";
 
   const monOf = wk => { const m = /^(\d{4})-W(\d{2})$/.exec(wk); return mondayOfIsoWeek(+m[1], +m[2]); };
   const heaviest = st => Math.max(-Infinity, ...st.map(x => num(x.w)).filter(v => v != null && v > 0));
@@ -2089,8 +2096,21 @@
     $("achEntrySub").textContent = t("achSub", { a: got.length, b: list.length });
     $("achPrev").innerHTML = got.slice().sort((a, b) => b.level - a.level).slice(0, 4).map(r => medalHtml(r, "tiny")).join("") ||
       medalHtml(list[0], "tiny");
-    const g = $("achGrid"); g.innerHTML = "";
+    // Two categories: Strength (badges with men/women targets, plus plank) and Consistency (everything else).
+    const wrap = $("achGrid"); wrap.innerHTML = "";
+    const grids = {};
+    ACH_CATS.forEach(c => {
+      const inCat = list.filter(r => achCat(r.a) === c.id);
+      const h = document.createElement("h3"); h.className = "ach-cat";
+      h.innerHTML = '<span></span><span class="ach-count"></span>';
+      h.firstChild.textContent = c.icon + " " + t(c.key);
+      h.lastChild.textContent = inCat.filter(r => r.level >= 0).length + "/" + inCat.length;
+      const g = document.createElement("div"); g.className = "ach-grid";
+      wrap.appendChild(h); wrap.appendChild(g);
+      grids[c.id] = g;
+    });
     list.forEach(r => {
+      const g = grids[achCat(r.a)];
       const next = r.tiers[r.level + 1];
       const noBw = r.a.needsBw && !r.M.hasBw;
       const b = document.createElement("button");
