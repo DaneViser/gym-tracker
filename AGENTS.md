@@ -43,6 +43,7 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `// Welcome / guide / language` | First-visit flow, `setLang()`. |
 | `// Profile` | `computeStats()`, `renderProfile()`, theme, delete-all. |
 | `// Controls` | Remaining button handlers, backup export (`exportBackup`) / import. |
+| `// Gym clock (header)` | Red LED-style clock above the header buttons (CSS: `/* gym clock`). |
 | `// Backup reminder` | `renderNag()`: banner if no backup after 14 days of use, or last one > 30 days old. |
 | `// Offline, storage protection, updates` | Service worker registration, `navigator.storage.persist()`, new-version check. |
 
