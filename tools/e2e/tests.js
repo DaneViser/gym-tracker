@@ -518,6 +518,36 @@ test("help guide opened with '?' closes with Escape, the X-less backdrop, or 'Go
   app.click(app.$("helpBtn")); app.click(app.$("finish")); assert(!app.shown("welcome"), "'Got it' should close the guide");
 });
 
+test("sounds: 'Timer' (default) only beeps for the timer, 'All' plays every sound, 'Off' is silent", async () => {
+  await boot({ storage: starterUser({ weeks: { [weekOf(-1)]: { upper2: { done: true, ex: {}, w: {}, sets: { bench: [{ w: "80", r: "5" }] } } } } }) });
+  localStorage.removeItem("gymtracker.sound");
+  const log = app.w.__gym.soundLog;
+  const finishTimer = async () => { const b = app.q('#presets button[data-s="60"]'); b.dataset.s = "1"; app.click(b); await sleep(1400); b.dataset.s = "60"; };
+  // default = timer only
+  openCard("lowerA"); app.click(app.q('.session[data-sid="lowerA"] .ex input[type=checkbox]'));
+  await finishTimer();
+  assertEq(log.slice(), ["timer"], "default mode should only beep for the timer");
+  // all
+  app.click(app.$("profileBtn")); app.click(app.q('#prSound [data-v="all"]')); app.click(app.$("prClose"));
+  assertEq(localStorage.getItem("gymtracker.sound"), "all", "setting not saved");
+  log.length = 0;
+  openCard("lowerA");
+  for (let i = 0; i < 20; i++) { const cb = app.qa('.session[data-sid="lowerA"] .ex input[type=checkbox]').find(c => !c.checked); if (!cb) break; app.click(cb); }
+  logSets("upper2", 0, [["85", "5"]]); // new record
+  await sleep(100);
+  assert(log.includes("pop"), "tick should pop: " + log.join(","));
+  assert(log.includes("done"), "finished workout should chime: " + log.join(","));
+  assert(log.includes("fanfare"), "record should play a fanfare: " + log.join(","));
+  // off
+  app.click(app.$("celebrate")); app.key("Escape"); app.key("Escape"); app.key("Escape");
+  app.click(app.$("profileBtn")); app.click(app.q('#prSound [data-v="off"]')); app.click(app.$("prClose"));
+  log.length = 0;
+  openCard("upper1"); app.click(app.q('.session[data-sid="upper1"] .ex input[type=checkbox]'));
+  await finishTimer();
+  assertEq(log.slice(), [], "'Off' must be silent");
+  localStorage.removeItem("gymtracker.sound");
+});
+
 test("no emojis anywhere, and every icon actually draws (both languages, every screen)", async () => {
   const weeks = { [weekOf(-1)]: { upper1: { done: true, ex: {}, w: {}, sets: { bench: [{ w: "100", r: "5" }], pullups: [{ w: "", r: "12" }] } } } };
   for (const lang of ["en", "sr"]) {

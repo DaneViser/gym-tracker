@@ -12,6 +12,7 @@ import { openProgress } from "./progress.js";
 import { renderNag } from "./controls.js";
 import { checkPR, liftOf } from "./achievements.js";
 import { applyIcons, icon } from "./icons.js";
+import { playSound } from "./sound.js";
 
 // ======================================================================
 // Render
@@ -94,7 +95,7 @@ export function renderSession(sess, key, isThisWeek, todayDow) {
   dc.addEventListener("change", e => {
     const s = sessionData(key, sess.id, true);
     s.done = e.target.checked;
-    if (s.done) toast(t("toastDone"), "circle-check");
+    if (s.done) { toast(t("toastDone"), "circle-check"); playSound("done"); }
     save(); render();
   });
   return el;
@@ -103,7 +104,7 @@ export function renderSession(sess, key, isThisWeek, todayDow) {
 export function maybeCompleteSession(key, sess) {
   const s = sessionData(key, sess.id, true);
   const req = sess.ex.filter(x => !x.optional);
-  if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; toast(t("toastDone"), "circle-check"); return true; }
+  if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; toast(t("toastDone"), "circle-check"); playSound("done"); return true; }
   return false;
 }
 
@@ -150,7 +151,7 @@ export function renderTrackBody(body, sess, key, sd) {
     btn.addEventListener("click", () => { openSets[setsKey] = !openSets[setsKey]; render(); });
 
     wrap.querySelector("input[type=checkbox]").addEventListener("change", e => {
-      buzz(15);
+      buzz(15); if (e.target.checked) playSound("pop");
       const s = sessionData(key, sess.id, true);
       s.ex[ex.id] = e.target.checked;
       maybeCompleteSession(key, sess);
@@ -246,7 +247,7 @@ export function renderSetsPanel(sess, ex, key, last, updateBtn, wrap) {
   function autoTick() {
     const s = sessionData(key, sess.id, true);
     if (s.ex[ex.id] || !cur.length || filled(cur).length !== cur.length) return false;
-    s.ex[ex.id] = true; buzz(15);
+    s.ex[ex.id] = true; buzz(15); playSound("pop");
     wrap.classList.add("checked");
     const cb = wrap.querySelector(".ex input[type=checkbox]"); if (cb) cb.checked = true;
     maybeCompleteSession(key, sess);

@@ -11,11 +11,12 @@ import { init as initControls } from "./controls.js";
 import { checkAchievements, scheduleAchCheck, init as initAchievements } from "./achievements.js";
 import { init as initClock } from "./clock.js";
 import { protectStorage, init as initOffline } from "./offline.js";
+import { soundLog, init as initSound } from "./sound.js";
 
 loadState();
 
 // The same order the screens were wired up in before (matters for the Escape key handlers).
-initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initControls(); initAchievements(); initClock(); initOffline();
+initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initControls(); initAchievements(); initClock(); initOffline(); initSound();
 
 onSaved(scheduleAchCheck); // every saved change may unlock an achievement
 let warnedSave = false;     // tell the user (once) if the phone refuses to save
@@ -26,4 +27,4 @@ render();
 protectStorage();
 checkAchievements();
 if (!state.name || !state.onboarded) openWelcome("first");
-window.__gym = { ready: true }; // lets the automated browser tests know startup finished
+window.__gym = { ready: true, soundLog }; // lets the automated browser tests know startup finished (and which sounds played)

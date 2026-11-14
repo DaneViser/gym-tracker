@@ -11,6 +11,7 @@ import { openWelcome, setLang } from "./welcome.js";
 import { renderAchievements } from "./achievements.js";
 import { storageProtected } from "./offline.js";
 import { icon } from "./icons.js";
+import { getSoundMode, playSound, setSoundMode } from "./sound.js";
 
 // ======================================================================
 // Profile
@@ -110,6 +111,8 @@ export function renderProfile() {
   [...$("prLang").children].forEach(b => b.classList.toggle("on", b.dataset.v === lang));
   let th = "auto"; try { th = localStorage.getItem("gymtracker.theme") || "auto"; } catch (e) {}
   [...$("prTheme").children].forEach(b => b.classList.toggle("on", b.dataset.v === th));
+  const snd = getSoundMode();
+  [...$("prSound").children].forEach(b => b.classList.toggle("on", b.dataset.v === snd));
 }
 export function openProfile() { renderProfile(); $("profile").classList.add("show"); document.body.classList.add("modal-open"); }
 export function closeProfile() { $("profile").classList.remove("show"); document.body.classList.remove("modal-open"); }
@@ -132,6 +135,13 @@ export function init() {
   });
   $("prNameInput").addEventListener("keydown", e => { if (e.key === "Enter") $("prNameSave").click(); });
   $("prLang").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) setLang(b.dataset.v); });
+  // Sounds: save the choice and play a short preview of what it means
+  $("prSound").addEventListener("click", e => {
+    const b = e.target.closest("button[data-v]"); if (!b) return;
+    setSoundMode(b.dataset.v);
+    if (b.dataset.v !== "off") playSound(b.dataset.v === "all" ? "done" : "timer", true);
+    renderProfile();
+  });
   $("prTheme").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) { applyTheme(b.dataset.v); renderProfile(); } });
   $("prGuide").addEventListener("click", () => { closeProfile(); openWelcome("guide"); });
   $("wipeBtn").addEventListener("click", () => {

@@ -16,7 +16,7 @@ const SHELL = [
   "css/clock.css", "css/achievements.css", "css/profile.css", "css/notices.css", "css/timer.css", "css/responsive.css",
   "js/version.js", "js/dom.js", "js/icons.js", "js/i18n.js", "js/starter.js", "js/state.js", "js/dates.js", "js/data.js", "js/render.js",
   "js/timer.js", "js/progress.js", "js/welcome.js", "js/profile.js", "js/controls.js", "js/achievements.js",
-  "js/clock.js", "js/offline.js", "js/main.js"
+  "js/clock.js", "js/offline.js", "js/sound.js", "js/main.js"
 ];
 const INDEX = new URL("./", self.registration.scope).href;
 const INDEX_PATH = new URL(INDEX).pathname;

@@ -81,6 +81,7 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `controls.js` | `exportBackup()`, restore, load starter, backup reminder (`renderNag()`). |
 | `achievements.js` | `ICONS` (Tabler, MIT), `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
 | `clock.js` | Header clock. |
+| `sound.js` | `SOUNDS` (made in code with Web Audio — no files), `playSound(kind)`, Sounds setting (off / timer / all, default timer). Tune a sound by editing its notes. |
 | `offline.js` | Service worker registration, `navigator.storage.persist()`, new-version check. |
 **Adding a new JS file:** import it from the file(s) that use it (and call its `init()` from `main.js` if it
 has one); **adding a CSS file:** add its `<link>` to `index.html`. Either way, add it to `SHELL` in `sw.js`
@@ -124,7 +125,7 @@ Also on `state`: `lastBackup` (ms timestamp), `backupCount`, `backupSnooze` (ms;
 (highest tier already celebrated; strength badges use `"bench:m"` etc.) and `achVersion`. Achievements themselves
 are never stored: they are recalculated from `weeks` + `program`.
 
-Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto).
+Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto), `gymtracker.sound` (`off`/`timer`/`all`, missing = timer).
 
 **Never rename or reshape these fields without a migration.** Real people have data on their
 phones; a breaking change silently loses their history. Add new optional fields instead, and

@@ -207,6 +207,11 @@ S.setLangValue("sr");
 eq("i18n", [1, 2, 4, 5, 11, 12, 21, 22, 25].map(mod.i18n.setsWord), ["serija", "serije", "serije", "serija", "serija", "serija", "serija", "serije", "serija"], "Serbian plural for 'serija'");
 S.setLangValue("en");
 
+// sounds: which kinds may play in which mode
+const SA = mod.sound.soundAllowed;
+eq("sound", ["pop", "done", "fanfare", "timer"].map(k => [SA(k, "off"), SA(k, "timer"), SA(k, "all")]),
+  [[false, false, true], [false, false, true], [false, false, true], [false, true, true]], "sound rules (off / timer / all)");
+
 // exercise-name matching for the strength badges
 const names = {
   "Bench press": "bench", "Bench press / mašina za grudi": "bench", "Incline bench press": null, "Bench dips": null,

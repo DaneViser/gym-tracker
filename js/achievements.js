@@ -10,6 +10,7 @@ import { filled, num, setsOf } from "./data.js";
 import { buzz, toast } from "./render.js";
 import { allSessionRecords, computeStats, hasActivity, renderProfile } from "./profile.js";
 import { DAY } from "./controls.js";
+import { playSound } from "./sound.js";
 
 // ======================================================================
 // Achievements  (icons: Tabler Icons, MIT license, see THIRD_PARTY_LICENSES.md)
@@ -297,7 +298,7 @@ export function nextCeleb() {
   c.innerHTML = item.html;
   c.onclick = () => { clearTimeout(celebTimer); c.hidden = true; if (item.ach) { openAchSheet(); openAch(item.ach); } setTimeout(nextCeleb, 200); };
   c.hidden = false; c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
-  buzz([30, 60, 30, 60, 80]);
+  buzz([30, 60, 30, 60, 80]); playSound("fanfare");
   celebTimer = setTimeout(() => { c.hidden = true; setTimeout(nextCeleb, 250); }, 3400);
 }
 

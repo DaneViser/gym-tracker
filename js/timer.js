@@ -3,6 +3,7 @@
 import { $ } from "./dom.js";
 import { t } from "./state.js";
 import { buzz } from "./render.js";
+import { playSound, unlockAudio } from "./sound.js";
 
 export let tEnd = 0, tTotal = 0, tTick = null;
 export const timerEl = () => $("timer");
@@ -14,7 +15,7 @@ export function stopTimer(finished) {
   [...$("presets").children].forEach(b => b.classList.remove("stop"));
   if (finished) {
     timerEl().classList.add("finished"); $("tlabel").textContent = t("go"); $("tclock").textContent = "0:00";
-    buzz([300, 150, 300, 150, 300]);
+    buzz([300, 150, 300, 150, 300]); playSound("timer");
     setTimeout(() => { timerEl().classList.remove("finished"); $("tlabel").textContent = t("rest"); }, 3000);
   } else { $("tlabel").textContent = t("rest"); $("tclock").textContent = "0:00"; }
 }
@@ -32,7 +33,8 @@ export function init() {
     stopTimer(false); timerEl().classList.remove("finished");
     tTotal = +b.dataset.s; tEnd = Date.now() + tTotal * 1000;
     b.classList.add("stop"); timerEl().classList.add("running"); $("tlabel").textContent = t("tapStop");
-    buzz(20); tickTimer(); tTick = setInterval(tickTimer, 250);
+    buzz(20); unlockAudio(); // the beep at the end comes later, so wake the audio engine now, during the tap
+    tickTimer(); tTick = setInterval(tickTimer, 250);
   });
   document.addEventListener("visibilitychange", () => { if (!document.hidden && tTick) tickTimer(); });
 }
