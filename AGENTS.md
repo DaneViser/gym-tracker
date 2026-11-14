@@ -91,6 +91,13 @@ they are recalculated from `weeks` + `program`, so changing thresholds is safe.
 `tiers`, `title`/`desc` as `[en, sr]`); compute the metric in `achMetrics()` if it is new. New icons: copy the
 `d` paths from the same Tabler version (`@tabler/icons` 3.19.0, `icons/outline/<name>.svg`) and list the icon in
 `THIRD_PARTY_LICENSES.md`. Only use icon sets with MIT/ISC-style licenses.
+Every badge has exactly **6 tiers** (Bronze, Silver, Gold, Platinum, Diamond, Legend).
+
+**Change badge thresholds**: edit `LADDERS` / the `tiers` arrays, then **bump `ACH_VERSION`** so phones
+re-record their levels silently (otherwise shifted tiers can fire false pop-ups or skip real ones).
+Strength ladders follow Strength Level's standards (strengthlevel.com, men 80 kg / women 60 kg bodyweight):
+Bronze = Beginner, Silver = Novice, Gold = Intermediate, Platinum = Advanced, Diamond = Elite, Legend = one
+step beyond Elite. Keep that mapping if you add lifts, and keep the source comment above `LADDERS` current.
 
 Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto).
 
