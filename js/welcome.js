@@ -18,6 +18,7 @@ export function showStep(n) {
 }
 export function welcomeTexts() {
   $("wTitle").textContent = wMode === "name" ? t("changeName") : t("welcome");
+  $("wWave").hidden = wMode === "name";
   $("next1").textContent = wMode === "name" ? t("save") : t("next");
   $("finish").textContent = guideOnly ? t("gotIt") : t("letsGo");
   $("guideLead").textContent = guideOnly ? t("howLeadAgain") : t("howLead");

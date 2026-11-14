@@ -3,7 +3,7 @@
 ## Tabler Icons
 
 Source: https://tabler.io/icons (npm package `@tabler/icons` 3.19.0).
-Used in `index.html` (`const ICONS`): arrow-big-up-lines, arrow-bar-to-up, arrows-vertical, info-circle, award, stopwatch, barbell, chevrons-down, chevrons-up, walk, calendar-check, device-floppy, flame, list-check, lock, refresh, scale, sparkles, sun, trophy, truck, weight.
+Used in `js/icons.js` (`ICONS`): alert-triangle, arrow-bar-to-up, arrow-big-up-lines, arrow-down, arrow-up, arrows-vertical, award, barbell, calendar, calendar-check, car, chart-line, check, chevron-left, chevron-right, chevrons-down, chevrons-up, circle-check, device-floppy, device-mobile, dots-vertical, flame, gender-female, gender-male, hand-stop, info-circle, list-check, lock, medal, pencil, refresh, scale, share-2, shield-check, sparkles, stopwatch, sun, trophy, truck, user, walk, weight, x.
 
 ```
 MIT License

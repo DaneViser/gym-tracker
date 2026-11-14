@@ -19,7 +19,7 @@ initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initCon
 
 onSaved(scheduleAchCheck); // every saved change may unlock an achievement
 let warnedSave = false;     // tell the user (once) if the phone refuses to save
-onSaveFailed(() => { if (!warnedSave) { warnedSave = true; toast(t("saveFailed")); } });
+onSaveFailed(() => { if (!warnedSave) { warnedSave = true; toast(t("saveFailed"), "alert-triangle"); } });
 
 applyStatic();
 render();

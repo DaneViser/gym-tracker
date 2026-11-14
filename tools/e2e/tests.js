@@ -284,7 +284,7 @@ test("restoring a backup with broken pieces repairs what it can", async () => {
   await boot({ storage: starterUser() });
   await restoreFile(JSON.stringify({ name: "Rest", weeks: { [weekOf(0)]: { x: { sets: { y: "nope" } } } }, program: [{ id: "x", title: "Mine", ex: [{ id: "y", name: "Row" }] }, "junk"] }));
   assertEq(app.qa(".session").length, 1, "the valid workout should be restored");
-  assertEq(app.text(app.$("hello")), "Hey, Rest 👋", "name should be restored");
+  assertEq(app.text(app.$("hello")).trim(), "Hey, Rest", "name should be restored");
 });
 
 // =====================================================================================
@@ -380,6 +380,10 @@ test("phone layout: nothing scrolls sideways on any screen", async () => {
   openCard("upper1"); app.click(app.q('.session[data-sid="upper1"] [data-a="edit"]')); noSideScroll("edit mode");
   app.click(app.$("progressBtn")); noSideScroll("progress"); app.click(app.$("pClose"));
   app.click(app.$("profileBtn")); noSideScroll("profile");
+  for (const b of app.qa(".pr-btn")) { // the › must sit next to its text, not drop onto its own line
+    const c = b.querySelector(".chev-r").getBoundingClientRect(), tx = b.firstElementChild.getBoundingClientRect();
+    assert(Math.abs((c.top + c.bottom) / 2 - (tx.top + tx.bottom) / 2) < 20, "› arrow wrapped onto its own line in '" + b.textContent.trim().slice(0, 30) + "'");
+  }
   app.click(app.$("achOpen")); noSideScroll("achievements");
   app.click(app.qa(".ach")[6]); noSideScroll("badge detail");
 });
@@ -512,6 +516,29 @@ test("help guide opened with '?' closes with Escape, the X-less backdrop, or 'Go
   app.key("Escape"); assert(!app.shown("welcome"), "Escape should close the guide");
   app.click(app.$("helpBtn")); app.click(app.$("welcome")); assert(!app.shown("welcome"), "tapping outside should close the guide");
   app.click(app.$("helpBtn")); app.click(app.$("finish")); assert(!app.shown("welcome"), "'Got it' should close the guide");
+});
+
+test("no emojis anywhere, and every icon actually draws (both languages, every screen)", async () => {
+  const weeks = { [weekOf(-1)]: { upper1: { done: true, ex: {}, w: {}, sets: { bench: [{ w: "100", r: "5" }], pullups: [{ w: "", r: "12" }] } } } };
+  for (const lang of ["en", "sr"]) {
+    await boot({ storage: starterUser({ weeks, profile: { sex: "f", bw: "60" }, lastBackup: Date.now() - 40 * 864e5 }), lang });
+    const visit = [
+      () => {}, () => { logSets("upper2", 0, [["50", "5"]]); }, () => { openCard("upper1"); app.click(app.q('.session[data-sid="upper1"] [data-a="edit"]')); },
+      () => app.click(app.$("progressBtn")), () => { app.click(app.$("pClose")); app.click(app.$("profileBtn")); },
+      () => app.click(app.$("achOpen")), () => app.click(app.qa(".ach").find(b => b.querySelector(".tc-i") || true)),
+      () => { app.click(app.$("achClose")); app.click(app.qa(".ach")[0]); }, () => { app.key("Escape"); app.key("Escape"); app.click(app.$("prClose")); app.click(app.$("helpBtn")); },
+      () => { app.click(app.$("finish")); app.$("updateBar").hidden = false; app.qa("details.info").forEach(d => { d.open = true; }); }
+    ];
+    for (const step of visit) {
+      step();
+      const m = app.d.body.innerText.match(/\p{Extended_Pictographic}/u);
+      assert(!m, "emoji visible (" + lang + "): " + (m && m[0]));
+      const empty = app.qa("[data-icon]").filter(el => !el.querySelector("svg") && el.offsetParent !== null);
+      assert(empty.length === 0, "icon placeholder without an icon: " + empty.map(e => e.dataset.icon).join(", "));
+      const broken = app.qa("svg path").filter(p => !p.getAttribute("d") || p.getAttribute("d") === "undefined");
+      assert(broken.length === 0, broken.length + " icon(s) with no drawing (unknown icon name?)");
+    }
+  }
 });
 
 // =====================================================================================

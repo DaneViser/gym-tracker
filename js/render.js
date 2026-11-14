@@ -11,6 +11,7 @@ import { timerBusy } from "./timer.js";
 import { openProgress } from "./progress.js";
 import { renderNag } from "./controls.js";
 import { checkPR, liftOf } from "./achievements.js";
+import { applyIcons, icon } from "./icons.js";
 
 // ======================================================================
 // Render
@@ -22,6 +23,7 @@ export const editing = new Set();
 export function applyStatic() {
   document.documentElement.lang = lang === "sr" ? "sr-Latn" : "en";
   document.querySelectorAll("[data-i18n]").forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  applyIcons(); // icons in the page and inside translated texts (<i data-icon>)
   document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); el.title = t(el.dataset.i18nAria); });
   [...$("langSeg").children].forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
@@ -30,8 +32,8 @@ export function applyStatic() {
 
 export function render() {
   const key = weekKey(viewMonday), w = isoWeek(viewMonday), isThisWeek = sameDay(viewMonday, thisMonday);
-  $("hello").textContent = state.name ? t("hello", { name: state.name }) : "";
-  $("avatarInitial").textContent = state.name ? state.name.trim().charAt(0).toUpperCase() : "👤";
+  $("hello").innerHTML = state.name ? esc(t("hello", { name: state.name })) + " " + icon("hand-stop", "i") : "";
+  if (state.name) $("avatarInitial").textContent = state.name.trim().charAt(0).toUpperCase(); else $("avatarInitial").innerHTML = icon("user");
   $("wkTitle").textContent = isThisWeek ? t("thisWeek", { w: w.week }) : t("weekOf", { w: w.week, y: w.year });
   $("wkRange").textContent = fmtShort(viewMonday) + " – " + fmtShort(addDays(viewMonday, 6));
   const total = program().length, n = doneCount(key);
@@ -92,7 +94,7 @@ export function renderSession(sess, key, isThisWeek, todayDow) {
   dc.addEventListener("change", e => {
     const s = sessionData(key, sess.id, true);
     s.done = e.target.checked;
-    if (s.done) toast(t("toastDone"));
+    if (s.done) toast(t("toastDone"), "circle-check");
     save(); render();
   });
   return el;
@@ -101,7 +103,7 @@ export function renderSession(sess, key, isThisWeek, todayDow) {
 export function maybeCompleteSession(key, sess) {
   const s = sessionData(key, sess.id, true);
   const req = sess.ex.filter(x => !x.optional);
-  if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; toast(t("toastDone")); return true; }
+  if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; toast(t("toastDone"), "circle-check"); return true; }
   return false;
 }
 
@@ -135,7 +137,7 @@ export function renderTrackBody(body, sess, key, sd) {
       btn.classList.toggle("logged", !!st.length);
       btn.classList.toggle("open", !!openSets[setsKey]);
       if (st.length) {
-        btn.querySelector("b").textContent = b ? (String(b.w || "").trim() || (String(b.r || "").trim() + "×")) : "✓";
+        if (b) btn.querySelector("b").textContent = String(b.w || "").trim() || (String(b.r || "").trim() + "×"); else btn.querySelector("b").innerHTML = icon("check", "i");
         btn.querySelector("small").textContent = st.length + " " + setsWord(st.length);
       } else {
         btn.querySelector("b").textContent = "+";
@@ -162,10 +164,10 @@ export function renderTrackBody(body, sess, key, sd) {
   const foot = document.createElement("div");
   foot.className = "s-foot";
   foot.innerHTML = '<small></small><div class="acts"><button class="linkbtn" type="button" data-a="clear"></button>' +
-    '<button class="pill" type="button" data-a="prog">📈</button><button class="pill" type="button" data-a="edit"></button></div>';
+    '<button class="pill" type="button" data-a="prog">' + icon("chart-line") + '</button><button class="pill" type="button" data-a="edit"></button></div>';
   foot.querySelector("small").textContent = t("footHint");
   foot.querySelector('[data-a="clear"]').textContent = t("clearTicks");
-  foot.querySelector('[data-a="edit"]').textContent = t("edit");
+  foot.querySelector('[data-a="edit"]').innerHTML = icon("pencil", "i") + " " + esc(t("edit"));
   const pb = foot.querySelector('[data-a="prog"]'); pb.setAttribute("aria-label", t("progressFor")); pb.title = t("progressFor");
   pb.addEventListener("click", () => openProgress(sess));
   foot.querySelector('[data-a="clear"]').addEventListener("click", () => {
@@ -301,9 +303,9 @@ export function renderEditBody(body, sess) {
     row.innerHTML =
       '<div class="fields"><input class="txt" data-f="name" maxlength="60">' +
         '<div class="sub"><input class="txt" data-f="sets" maxlength="30"><label class="optlbl"><input type="checkbox" class="chk" data-f="optional"><span></span></label></div></div>' +
-      '<div class="ctrls"><button class="mini" type="button" data-a="up"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
-        '<button class="mini" type="button" data-a="down"' + (i === sess.ex.length - 1 ? " disabled" : "") + '>↓</button>' +
-        '<button class="mini del" type="button" data-a="del">✕</button></div>';
+      '<div class="ctrls"><button class="mini" type="button" data-a="up"' + (i === 0 ? " disabled" : "") + '>' + icon("arrow-up") + '</button>' +
+        '<button class="mini" type="button" data-a="down"' + (i === sess.ex.length - 1 ? " disabled" : "") + '>' + icon("arrow-down") + '</button>' +
+        '<button class="mini del" type="button" data-a="del">' + icon("x") + '</button></div>';
     const nameI = row.querySelector('[data-f="name"]'), setsI = row.querySelector('[data-f="sets"]'), optI = row.querySelector('[data-f="optional"]');
     nameI.placeholder = t("exNamePh"); nameI.setAttribute("aria-label", t("exNamePh"));
     setsI.placeholder = t("setsPh"); setsI.setAttribute("aria-label", t("setsPh"));
@@ -372,9 +374,10 @@ export function renderHistory(curKey) {
 
 export function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 export let toastTimer;
-export function toast(msg) {
+// ic: icon name shown before the message (default: a check mark).
+export function toast(msg, ic = "check") {
   buzz([40, 60, 40]);
-  const el = $("toast"); el.textContent = msg; el.classList.add("show");
+  const el = $("toast"); el.innerHTML = icon(ic, "i") + " " + esc(msg); el.classList.add("show");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
 }
 

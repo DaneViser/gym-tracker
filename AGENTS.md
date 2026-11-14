@@ -67,6 +67,7 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `main.js` | Startup: `loadState()`, every file's `init()`, first `render()`, welcome. The only file index.html loads. |
 | `version.js` | `APP_VERSION` — **bump on every deploy**. |
 | `dom.js` | `$()` = `document.getElementById`. |
+| `icons.js` | `ICONS` (all Tabler icons, MIT), `icon(name, cls)` → `<svg>`, `applyIcons()` fills `<i data-icon="name">`. |
 | `i18n.js` | `I18N` — **all UI text**, `en:` block then `sr:` block; `setsWord()` (Serbian plurals). |
 | `starter.js` | `STARTER` 4-day program (texts as `[en, sr]`), `starterProgram()`, `tr()`. |
 | `state.js` | `state`, `loadState()`, `save()`, `replaceState()`, **`normalizeState()` (repairs old/broken data)**, `t()`, `esc()`, `uid()`, `lang`, `program()`, `onSaved()`/`onSaveFailed()` hooks. |
@@ -142,6 +143,8 @@ make code tolerate them missing (see how `setsOf()` falls back from `sets` to `w
 6. Wrap every `localStorage` call in `try/catch` (private mode can throw).
 7. After changing data in an event handler: `save(); render();`.
 8. Never put page or storage access at the top level of a module — put it in `init()`.
+9. **No emojis** anywhere (they look different on every phone). Use icons: `icon("name", "i")` in JS for an
+   inline icon, `<i data-icon="name"></i>` in index.html or inside a translated text. `check.js` enforces this.
 
 ## Common changes (recipes)
 
@@ -160,8 +163,9 @@ Users only get the new starter when they tap "Load starter program" in their pro
 `ICONS`, metric `m`, `tiers`, `title`/`desc` as `[en, sr]`); compute the metric in `achMetrics()` if it is new.
 Badges with men/women targets (`sexNote: true`) and plank go in the Strength category, everything else in
 Consistency (`achCat()`). Every badge has exactly **6 tiers** (Bronze, Silver, Gold, Platinum, Diamond, Legend).
-New icons: copy the `d` paths from the same Tabler version (`@tabler/icons` 3.19.0,
-`icons/outline/<name>.svg`) and list the icon in `THIRD_PARTY_LICENSES.md`. Only use MIT/ISC-style icon sets.
+New icons go in `js/icons.js`: copy the `d` paths from the same Tabler version (`@tabler/icons` 3.19.0,
+`icons/outline/<name>.svg`, browse them at tabler.io/icons) and list the icon in `THIRD_PARTY_LICENSES.md`.
+Only use MIT/ISC-style icon sets.
 
 **Change badge thresholds**: edit `LADDERS` / the `tiers` arrays, then **bump `ACH_VERSION`** so phones
 re-record their levels silently (otherwise shifted tiers can fire false pop-ups or skip real ones).

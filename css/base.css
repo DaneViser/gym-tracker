@@ -63,3 +63,13 @@ details.info li b { font-weight: 600; }
 .stat b.up { color: var(--ok); }
 
 .install-steps { margin: 0 0 16px; padding-left: 20px; }
+
+/* Icons (js/icons.js): <i data-icon> in the page/texts and <svg class="i"> sit inside a line of text
+   and scale with it; buttons set their own icon size below. */
+[data-icon] { display: inline-flex; vertical-align: -0.18em; }
+[data-icon] svg, svg.i { width: 1.15em; height: 1.15em; flex: none; }
+svg.i { vertical-align: -0.18em; }
+.icon-btn svg { width: 20px; height: 20px; }
+.pill svg { width: 17px; height: 17px; }
+.sum-t { display: inline-flex; align-items: center; gap: 8px; }
+.sum-t > [data-icon] { color: var(--accent); }

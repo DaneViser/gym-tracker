@@ -103,3 +103,6 @@
 .empty-state { text-align: center; padding: 28px 16px 18px; color: var(--muted); }
 .empty-state b { color: var(--text); }
 .empty-state > b:first-child { display: block; font-size: 17px; margin-bottom: 4px; }
+
+.mini svg { width: 18px; height: 18px; }
+.setbtn b svg { width: 18px; height: 18px; }

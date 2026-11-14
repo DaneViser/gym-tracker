@@ -24,3 +24,8 @@
   opacity: 0; pointer-events: none; transition: all .25s; box-shadow: 0 6px 24px rgba(0,0,0,.2); z-index: 60; white-space: nowrap;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.nag-ico { flex: none; width: 38px; height: 38px; border-radius: 11px; background: var(--surface); color: var(--accent); display: grid; place-items: center; }
+.nag-ico svg { width: 21px; height: 21px; }
+.update-bar { display: inline-flex; align-items: center; gap: 8px; }
+.toast { display: inline-flex; align-items: center; gap: 8px; }

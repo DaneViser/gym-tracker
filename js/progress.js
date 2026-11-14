@@ -1,4 +1,4 @@
-// Progress chart sheet (📈): entriesFor(), openProgress(), renderProgress() — hand-made SVG chart.
+// Progress chart sheet: entriesFor(), openProgress(), renderProgress() — hand-made SVG chart.
 
 import { $ } from "./dom.js";
 import { tr } from "./starter.js";

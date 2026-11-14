@@ -43,18 +43,18 @@
         <span class="mt" aria-hidden="true"><span id="mHM">--:--</span><span class="ms" id="mS">:--</span></span>
       </div>
       <div class="btns">
-        <button class="icon-btn" id="progressBtn" data-i18n-aria="progress">📈</button>
+        <button class="icon-btn" id="progressBtn" data-i18n-aria="progress"><i data-icon="chart-line"></i></button>
         <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
-        <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial">👤</span></button>
+        <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial"></span></button>
       </div>
     </div>
   </header>
 
   <section class="weekbar">
     <div class="weeknav">
-      <button class="icon-btn" id="prevWk" data-i18n-aria="prevWeek">‹</button>
+      <button class="icon-btn" id="prevWk" data-i18n-aria="prevWeek"><i data-icon="chevron-left"></i></button>
       <div class="label"><b id="wkTitle"></b><small id="wkRange"></small></div>
-      <button class="icon-btn" id="nextWk" data-i18n-aria="nextWeek">›</button>
+      <button class="icon-btn" id="nextWk" data-i18n-aria="nextWeek"><i data-icon="chevron-right"></i></button>
     </div>
     <div class="progress">
       <div class="bar" id="bar"><i></i></div>
@@ -64,6 +64,7 @@
   </section>
 
   <div class="nag" id="nag" hidden>
+    <span class="nag-ico" data-icon="device-floppy"></span>
     <div class="nt"><b data-i18n="nagTitle"></b><small id="nagText"></small></div>
     <div class="na"><button class="pill" id="nagLater" type="button" data-i18n="later"></button><button class="pill primary" id="nagBackup" type="button" data-i18n="backupNow"></button></div>
   </div>
@@ -72,7 +73,7 @@
   <button class="add-workout" id="addWorkout" type="button" data-i18n="addWorkout"></button>
 
   <details class="info">
-    <summary data-i18n="installTitle"></summary>
+    <summary><span class="sum-t"><i data-icon="device-mobile"></i> <span data-i18n="installTitle"></span></span></summary>
     <p style="margin:0 0 8px" data-i18n="installLead"></p>
     <ul class="install-steps" data-i18n="installSteps"></ul>
   </details>
@@ -92,7 +93,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<button class="update-bar" id="updateBar" type="button" hidden data-i18n="updateReady"></button>
+<button class="update-bar" id="updateBar" type="button" hidden><i data-icon="sparkles"></i> <span data-i18n="updateReady"></span></button>
 
 <div class="timer" id="timer">
   <div class="tbar" id="tbar"></div>
@@ -111,8 +112,8 @@
 <div class="modal" id="progress" role="dialog" aria-modal="true" aria-labelledby="pTitle">
   <div class="sheet tall">
     <div class="p-top">
-      <h2 id="pTitle" data-i18n="progressTitle"></h2>
-      <button class="p-close" id="pClose" type="button" data-i18n-aria="close">✕</button>
+      <h2 id="pTitle"><i data-icon="chart-line"></i> <span data-i18n="progressTitle"></span></h2>
+      <button class="p-close" id="pClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button>
     </div>
     <label class="field"><span data-i18n="exercise"></span><select class="sel" id="pSelect"></select></label>
     <div id="pBody"></div>
@@ -127,7 +128,7 @@
         <div class="avatar" id="prAvatar"></div>
         <div><h2 id="prName"></h2><small id="prSince"></small></div>
       </div>
-      <button class="p-close" id="prClose" type="button" data-i18n-aria="close">✕</button>
+      <button class="p-close" id="prClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button>
     </div>
 
     <div class="stats pr-stats" id="prStats"></div>
@@ -136,7 +137,7 @@
     <button class="ach-entry" id="achOpen" type="button">
       <span class="ach-prev" id="achPrev"></span>
       <span class="ae-t"><b data-i18n="achTitle"></b><small id="achEntrySub"></small></span>
-      <span class="chev-r">›</span>
+      <i class="chev-r" data-icon="chevron-right"></i>
     </button>
 
     <h3 class="pr-h" data-i18n="settings"></h3>
@@ -156,7 +157,7 @@
       <label class="pr-row"><span><b data-i18n="bwField"></b><small data-i18n="bwHint"></small></span>
         <span class="pr-inline bw"><input class="txt" id="prBw" type="text" inputmode="decimal" maxlength="6" placeholder="kg"><button class="pill" id="prBwSave" type="button" data-i18n="save"></button></span>
       </label>
-      <button class="pr-row pr-btn" id="prGuide" type="button"><span data-i18n="howTo"></span><span class="chev-r">›</span></button>
+      <button class="pr-row pr-btn" id="prGuide" type="button"><span data-i18n="howTo"></span><i class="chev-r" data-icon="chevron-right"></i></button>
     </div>
 
     <h3 class="pr-h" data-i18n="records"></h3>
@@ -164,10 +165,10 @@
 
     <h3 class="pr-h" data-i18n="dataTitle"></h3>
     <div class="pr-list">
-      <button class="pr-row pr-btn" id="exportBtn" type="button"><span><b data-i18n="backup"></b><small data-i18n="backupD"></small></span><span class="chev-r">›</span></button>
-      <button class="pr-row pr-btn" id="importBtn" type="button"><span><b data-i18n="restore"></b><small data-i18n="restoreD"></small></span><span class="chev-r">›</span></button>
-      <button class="pr-row pr-btn" id="templateBtn" type="button"><span><b data-i18n="loadStarter"></b><small data-i18n="loadStarterD"></small></span><span class="chev-r">›</span></button>
-      <button class="pr-row pr-btn danger" id="wipeBtn" type="button"><span><b data-i18n="wipe"></b><small data-i18n="wipeD"></small></span><span class="chev-r">›</span></button>
+      <button class="pr-row pr-btn" id="exportBtn" type="button"><span><b data-i18n="backup"></b><small data-i18n="backupD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
+      <button class="pr-row pr-btn" id="importBtn" type="button"><span><b data-i18n="restore"></b><small data-i18n="restoreD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
+      <button class="pr-row pr-btn" id="templateBtn" type="button"><span><b data-i18n="loadStarter"></b><small data-i18n="loadStarterD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
+      <button class="pr-row pr-btn danger" id="wipeBtn" type="button"><span><b data-i18n="wipe"></b><small data-i18n="wipeD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
     <p class="note" data-i18n="localNote"></p>
@@ -180,7 +181,7 @@
   <div class="sheet tall">
     <div class="p-top">
       <h2 id="achSTitle"><span data-i18n="achTitle"></span> <span class="ach-count" id="achCount"></span></h2>
-      <button class="p-close" id="achSClose" type="button" data-i18n-aria="close">✕</button>
+      <button class="p-close" id="achSClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button>
     </div>
     <div id="achGrid"></div>
     <p class="note" data-i18n="achFoot"></p>
@@ -190,7 +191,7 @@
 <!-- Achievement detail -->
 <div class="modal" id="achModal" role="dialog" aria-modal="true" aria-labelledby="achMTitle">
   <div class="sheet">
-    <div class="p-top"><span></span><button class="p-close" id="achClose" type="button" data-i18n-aria="close">✕</button></div>
+    <div class="p-top"><span></span><button class="p-close" id="achClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button></div>
     <div class="ach-detail" id="achDetail"></div>
   </div>
 </div>
@@ -209,7 +210,7 @@
     </div>
 
     <div id="step1">
-      <h2 id="wTitle"></h2>
+      <h2><span id="wTitle"></span> <i id="wWave" data-icon="hand-stop"></i></h2>
       <p class="lead" data-i18n="welcomeLead"></p>
       <label class="field"><span data-i18n="nameLabel"></span>
         <input class="txt" id="nameInput" type="text" maxlength="30" autocomplete="given-name" data-i18n-ph="namePh">
@@ -231,12 +232,12 @@
       <h2 data-i18n="howTitle"></h2>
       <p class="lead" id="guideLead"></p>
       <ul class="howto">
-        <li><span class="ico">📅</span><span data-i18n="how1"></span></li>
-        <li><span class="ico">✅</span><span data-i18n="how2"></span></li>
-        <li><span class="ico">🏋️</span><span data-i18n="how3"></span></li>
-        <li><span class="ico">✏️</span><span data-i18n="how4"></span></li>
-        <li><span class="ico">⏱️</span><span data-i18n="how5"></span></li>
-        <li><span class="ico">💾</span><span data-i18n="how6"></span></li>
+        <li><span class="ico" data-icon="calendar"></span><span data-i18n="how1"></span></li>
+        <li><span class="ico" data-icon="circle-check"></span><span data-i18n="how2"></span></li>
+        <li><span class="ico" data-icon="barbell"></span><span data-i18n="how3"></span></li>
+        <li><span class="ico" data-icon="pencil"></span><span data-i18n="how4"></span></li>
+        <li><span class="ico" data-icon="stopwatch"></span><span data-i18n="how5"></span></li>
+        <li><span class="ico" data-icon="device-floppy"></span><span data-i18n="how6"></span></li>
       </ul>
       <div class="actions">
         <button class="pill" id="back2" type="button" data-i18n="back"></button>

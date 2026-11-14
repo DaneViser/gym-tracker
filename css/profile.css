@@ -24,13 +24,17 @@
 .pr-btn { cursor: pointer; }
 .pr-btn:hover { background: var(--surface-2); }
 .pr-btn.danger b { color: var(--danger); }
-.chev-r { color: var(--muted); font-size: 22px; line-height: 1; }
+.chev-r { color: var(--muted); display: inline-flex; }
+.chev-r svg { width: 20px; height: 20px; }
+.avatar-btn span svg { width: 18px; height: 18px; }
+.avatar svg { width: 28px; height: 28px; }
+.tchip .tc-l svg.i, .pr-fun svg.i { color: var(--accent); }
 .pr-inline { display: flex; gap: 8px; flex: 1; max-width: 260px; }
 .pr-inline .txt { min-width: 0; }
 .pr-inline .pill { height: 44px; }
 .rec { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
 .rec:last-child { border-bottom: 0; }
-.rec .medal { width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 16px; }
+.rec .medal { flex: none; }
 .rec .rn { flex: 1; min-width: 0; }
 .rec .rn b { display: block; font-weight: 600; overflow-wrap: anywhere; }
 .rec .rn small { color: var(--muted); font-size: 12.5px; }
@@ -41,3 +45,6 @@
 
 .pr-inline.bw { max-width: 180px; }
 @media (max-width: 420px) { .pr-inline.bw { max-width: none; } }
+/* Button rows (backup, restore, …) keep their › on the same line, even on phones. */
+.pr-row.pr-btn { flex-wrap: nowrap; }
+.pr-btn > span:first-child { flex: 1; min-width: 0; }

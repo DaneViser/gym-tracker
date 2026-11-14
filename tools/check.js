@@ -47,6 +47,24 @@ for (const m of jsSrc["main.js"].matchAll(/import \{([^}]+)\} from "\.\/(\w+)\.j
 }
 const { I18N } = mod.i18n, S = mod.state;
 
+// Missing imports only crash when that code runs, so look for them here: a name another module exports,
+// used in this file (as code, not inside a string/comment or after a dot), but not imported or declared here.
+const owner = {};
+for (const [f, s] of Object.entries(jsSrc)) for (const m of s.matchAll(/^export (?:async )?(?:function|const|let|var) ([\w$]+)/gm)) if (m[1] !== "init") owner[m[1]] = f;
+const codeOnly = s => s.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "")
+  .replace(/(["'`])(?:\\.|(?!\1)[^\\\n])*\1/g, '""'); // drop comments and string contents
+for (const [f, s] of Object.entries(jsSrc)) {
+  const code = codeOnly(s), have = new Set();
+  for (const m of s.matchAll(/^import \{([^}]+)\}/gm)) m[1].split(",").forEach(x => have.add(x.trim().split(/\s+as\s+/).pop()));
+  for (const m of s.matchAll(/^(?:export )?(?:async )?(?:function|const|let|var) ([\w$]+)/gm)) have.add(m[1]);
+  for (const [name, from] of Object.entries(owner)) {
+    if (from === f || have.has(name)) continue;
+    const re = name === "$" ? /(?<![\w$.])\$\(/ // "$" also appears in regexes, so only count $( calls
+      : new RegExp("(?<![\\w$.])" + name + "(?![\\w$])(?!\\s*:)");
+    if (re.test(code)) fail("load", f + " uses '" + name + "' from " + from + " but doesn't import it");
+  }
+}
+
 // ---------------------------------------------------------------- 2. translations match
 console.log("2. English / Serbian texts");
 const enKeys = Object.keys(I18N.en).sort(), srKeys = Object.keys(I18N.sr).sort();
@@ -88,12 +106,22 @@ for (const a of A.ACH) {
     const tiers = typeof a.tiers === "function" ? a.tiers({ sex }) : a.tiers;
     check("ach", rising(tiers), a.id + " (" + sex + "): needs exactly 6 rising tiers, got " + JSON.stringify(tiers));
   }
-  check("ach", a.icon in A.ICONS, a.id + ": icon '" + a.icon + "' is not in ICONS");
+  check("ach", a.icon in mod.icons.ICONS, a.id + ": icon '" + a.icon + "' is not in ICONS");
   for (const f of ["title", "desc"]) check("ach", Array.isArray(a[f]) && a[f].length === 2 && a[f].every(x => typeof x === "string" && x.trim()), a.id + ": " + f + " must be [english, serbian]");
   if (a.labels) check("ach", a.labels.length === 6 && a.labels.every(l => Array.isArray(l) && l.length === 2), a.id + ": labels must be 6 × [en, sr]");
 }
 for (const [id, l] of Object.entries(A.LADDERS)) for (const [sex, arr] of Object.entries(l)) check("ach", rising(arr), "LADDERS." + id + "." + sex + " must be 6 rising numbers");
-for (const id of Object.keys(A.ICONS)) check("ach", read("THIRD_PARTY_LICENSES.md").includes(id), "icon '" + id + "' not listed in THIRD_PARTY_LICENSES.md");
+for (const id of Object.keys(mod.icons.ICONS)) check("icons", read("THIRD_PARTY_LICENSES.md").includes(id), "icon '" + id + "' not listed in THIRD_PARTY_LICENSES.md");
+// every icon name used anywhere must exist (data-icon="…" in the page/texts, icon("…") in code, icon: "…" in badges)
+const noComments = s => s.replace(/\/\/[^\n]*/g, "");
+const iconUses = [...html.matchAll(/data-icon=\\?"([\w-]+)/g), ...Object.values(jsSrc).flatMap(s => [...noComments(s).matchAll(/data-icon=\\?"([\w-]+)|icon\("([\w-]+)"|icon: "([\w-]+)"|icon\(i < 3 \? "([\w-]+)" : "([\w-]+)"/g)])]
+  .flatMap(m => m.slice(1).filter(Boolean));
+for (const n of new Set(iconUses)) check("icons", n in mod.icons.ICONS, "icon '" + n + "' is used but not in js/icons.js");
+// no emojis: they look different on every phone (and some old ones show as boxes). Use icons instead.
+const emoji = /\p{Extended_Pictographic}/u;
+for (const [f, s] of [["index.html", html], ...Object.entries(jsSrc).map(([f, s]) => ["js/" + f, s]), ...cssFiles.map(f => ["css/" + f, read("css/" + f)])]) {
+  s.split("\n").forEach((line, i) => { const m = line.match(emoji); if (m) fail("icons", f + ":" + (i + 1) + " contains an emoji (" + m[0] + ") — use an icon from js/icons.js"); });
+}
 
 // ---------------------------------------------------------------- 6. starter program
 console.log("6. starter program");

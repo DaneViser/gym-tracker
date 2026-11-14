@@ -16,7 +16,7 @@ import { hasActivity, renderProfile } from "./profile.js";
 export async function exportBackup() {
   const fname = "gym-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
   const json = JSON.stringify(state, null, 2);
-  const done = () => { state.backupCount = (state.backupCount || (state.lastBackup ? 1 : 0)) + 1; state.lastBackup = Date.now(); save(); renderNag(); if ($("profile").classList.contains("show")) renderProfile(); toast(t("backupSaved")); };
+  const done = () => { state.backupCount = (state.backupCount || (state.lastBackup ? 1 : 0)) + 1; state.lastBackup = Date.now(); save(); renderNag(); if ($("profile").classList.contains("show")) renderProfile(); toast(t("backupSaved"), "device-floppy"); };
   const touch = window.matchMedia && matchMedia("(pointer: coarse)").matches;
   if (touch && typeof File === "function" && navigator.canShare) {
     try {

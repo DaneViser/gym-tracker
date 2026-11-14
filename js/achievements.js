@@ -1,6 +1,7 @@
-// Achievements: ICONS (Tabler, MIT), LIFTS name matching, LADDERS (researched standards), ACH badge
+// Achievements: LIFTS name matching, LADDERS (researched standards), ACH badge
 // list, ACH_VERSION, metrics, badge sheet + detail, celebration pop-ups, new-record pop-up.
 
+import { ICONS, icon } from "./icons.js";
 import { $ } from "./dom.js";
 import { LI, tr } from "./starter.js";
 import { esc, lang, program, save, saveRaw, state, t } from "./state.js";
@@ -15,31 +16,6 @@ import { DAY } from "./controls.js";
 // ======================================================================
 // Everything here is DERIVED from state.weeks / state.program, so old history counts.
 // Only state.achSeen (highest tier already celebrated per badge) is stored, so we know what is new.
-export const ICONS = {
-  "info-circle": "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0 M12 9h.01 M11 12h1v4h1",
-  "arrow-big-up-lines": "M9 12h-3.586a1 1 0 0 1 -.707 -1.707l6.586 -6.586a1 1 0 0 1 1.414 0l6.586 6.586a1 1 0 0 1 -.707 1.707h-3.586v3h-6v-3z M9 21h6 M9 18h6",
-  stopwatch: "M5 13a7 7 0 1 0 14 0a7 7 0 0 0 -14 0z M14.5 10.5l-2.5 2.5 M17 8l1 -1 M14 3h-4",
-  "arrows-vertical": "M8 7l4 -4l4 4 M8 17l4 4l4 -4 M12 3l0 18",
-  "arrow-bar-to-up": "M12 10l0 10 M12 10l4 4 M12 10l-4 4 M4 4l16 0",
-  "chevrons-up": "M7 11l5 -5l5 5 M7 17l5 -5l5 5",
-  "chevrons-down": "M7 7l5 5l5 -5 M7 13l5 5l5 -5",
-  walk: "M13 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M7 21l3 -4 M16 21l-2 -4l-3 -3l1 -6 M6 12l2 -3l4 -1l3 3l3 1",
-  award: "M12 9m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0 M12 15l3.4 5.89l1.598 -3.233l3.598 .232l-3.4 -5.889 M6.802 12l-3.4 5.89l3.598 -.233l1.598 3.232l3.4 -5.889",
-  barbell: "M2 12h1 M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2 M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1z M9 12h6 M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1z M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2 M22 12h-1",
-  "calendar-check": "M11.5 21h-5.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6 M16 3v4 M8 3v4 M4 11h16 M15 19l2 2l4 -4",
-  "device-floppy": "M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2 M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M14 4l0 4l-6 0l0 -4",
-  flame: "M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z",
-  "list-check": "M3.5 5.5l1.5 1.5l2.5 -2.5 M3.5 11.5l1.5 1.5l2.5 -2.5 M3.5 17.5l1.5 1.5l2.5 -2.5 M11 6l9 0 M11 12l9 0 M11 18l9 0",
-  lock: "M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0 M8 11v-4a4 4 0 1 1 8 0v4",
-  refresh: "M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4",
-  scale: "M7 20l10 0 M6 6l6 -1l6 1 M12 3l0 17 M9 12l-3 -6l-3 6a3 3 0 0 0 6 0 M21 12l-3 -6l-3 6a3 3 0 0 0 6 0",
-  sparkles: "M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z",
-  sun: "M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0 M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7",
-  trophy: "M8 21l8 0 M12 17l0 4 M7 4l10 0 M17 4v8a5 5 0 0 1 -10 0v-8 M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0",
-  truck: "M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5",
-  weight: "M12 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0 M6.835 9h10.33a1 1 0 0 1 .984 .821l1.637 9a1 1 0 0 1 -.984 1.179h-13.604a1 1 0 0 1 -.984 -1.179l1.637 -9a1 1 0 0 1 .984 -.821z"
-};
-export const icon = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[n] + '"/></svg>';
 export const TIER_COLORS = ["#c47a3d", "#9aa5b1", "#e8a90c", "#38bdd1", "#8b6cf0", "#e5484d"]; // bronze → legend
 export const kgTxt = v => fmtNum(v) + " " + t("kg");
 export const tonTxt = v => v >= 1000 ? fmtNum(v / 1000) + " t" : fmtNum(v) + " " + t("kg");
@@ -139,7 +115,7 @@ export const ACH = [
 // Bump when thresholds change: everyone's "already celebrated" levels are re-recorded silently,
 // so a re-shuffled ladder never fires false pop-ups or swallows real ones.
 export const ACH_VERSION = 2;
-export const ACH_CATS = [{ id: "strength", icon: "💪", key: "catStrength" }, { id: "habit", icon: "🔥", key: "catHabit" }];
+export const ACH_CATS = [{ id: "strength", icon: "barbell", key: "catStrength" }, { id: "habit", icon: "flame", key: "catHabit" }];
 export const achCat = a => a.sexNote || a.m === "plank" ? "strength" : "habit";
 
 export const monOf = wk => { const m = /^(\d{4})-W(\d{2})$/.exec(wk); return mondayOfIsoWeek(+m[1], +m[2]); };
@@ -232,7 +208,7 @@ export function renderAchievements() {
     const inCat = list.filter(r => achCat(r.a) === c.id);
     const h = document.createElement("h3"); h.className = "ach-cat";
     h.innerHTML = '<span></span><span class="ach-count"></span>';
-    h.firstChild.textContent = c.icon + " " + t(c.key);
+    h.firstChild.innerHTML = icon(c.icon, "i") + " " + esc(t(c.key));
     h.lastChild.textContent = inCat.filter(r => r.level >= 0).length + "/" + inCat.length;
     const g = document.createElement("div"); g.className = "ach-grid";
     wrap.appendChild(h); wrap.appendChild(g);
@@ -247,7 +223,7 @@ export function renderAchievements() {
     b.innerHTML = medalHtml(r) + '<span class="at"></span><span class="as"></span>' +
       (next != null && !noBw && r.tiers.length > 1 ? '<span class="ab"><i style="width:' + Math.max(0, Math.min(100, r.v / next * 100)).toFixed(0) + '%"></i></span>' : "");
     b.querySelector(".at").textContent = r.title;
-    b.querySelector(".as").textContent = r.level >= 0 ? tierName(r, r.level) : noBw ? "—" : r.tiers.length === 1 ? "🔒" : fmtA(r, r.v) + " / " + fmtA(r, next);
+    b.querySelector(".as").textContent = r.level >= 0 ? tierName(r, r.level) : noBw ? "—" : fmtA(r, r.v) + " / " + fmtA(r, next);
     b.addEventListener("click", () => openAch(r.a.id));
     g.appendChild(b);
   });
@@ -273,7 +249,8 @@ export function openAch(id) {
   if (noBw) el.querySelector(".note2").textContent = t("needBw");
   else if (r.a.sexNote) {
     const c = el.querySelector(".tchip"), b = c.querySelector(".tc-i");
-    c.querySelector(".tc-l").textContent = t({ m: "targetsM", f: "targetsF", x: "targetsX" }[r.M.sex]);
+    c.querySelector(".tc-l").innerHTML = ({ m: icon("gender-male", "i") + " ", f: icon("gender-female", "i") + " " }[r.M.sex] || "") +
+        esc(t({ m: "targetsM", f: "targetsF", x: "targetsX" }[r.M.sex]));
     c.querySelector(".tc-tip").textContent = t("targetsTip");
     b.setAttribute("aria-label", t("targetsTip"));
     b.addEventListener("click", e => { e.stopPropagation(); c.classList.toggle("open"); b.setAttribute("aria-expanded", c.classList.contains("open")); });
@@ -288,7 +265,8 @@ export function openAch(id) {
     // Plate label only when the weight is exactly bar (20) + 20 kg plates on each side.
     const plateN = r.a.plates && th > 20 && (th - 20) % 40 === 0 ? (th - 20) / 40 : 0;
     li.querySelector("small").textContent = r.a.labels ? r.a.labels[i][L] : plateN ? plates(plateN) : "";
-    li.querySelector(".ts").textContent = got ? "✓" : single || noBw ? "🔒" : t("toGo", { v: fmtA(r, th - r.v) });
+    if (got || single || noBw) li.querySelector(".ts").innerHTML = icon(got ? "check" : "lock", "i");
+      else li.querySelector(".ts").textContent = t("toGo", { v: fmtA(r, th - r.v) });
     ul.appendChild(li);
   });
   $("achModal").classList.add("show"); document.body.classList.add("modal-open");

@@ -27,7 +27,8 @@
 .choice small { color: var(--muted); font-size: 13px; }
 .howto { list-style: none; padding: 0; margin: 0 0 20px; display: grid; gap: 12px; }
 .howto li { display: flex; gap: 12px; align-items: flex-start; }
-.howto .ico { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; font-size: 18px; }
+.howto .ico { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; color: var(--accent); }
+.howto .ico svg { width: 20px; height: 20px; }
 .howto b { display: block; font-size: 15px; }
 .howto span.d { color: var(--muted); font-size: 13.5px; }
 .howto span.d b { display: inline; font-size: inherit; color: var(--text); }
@@ -39,4 +40,6 @@
 .p-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
 .p-top h2 { margin: 0; }
 
-.p-close { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 18px; cursor: pointer; flex: none; }
+.p-close { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); cursor: pointer; flex: none; display: grid; place-items: center; padding: 0; }
+.p-close svg { width: 20px; height: 20px; }
+#pTitle [data-icon] { color: var(--accent); }

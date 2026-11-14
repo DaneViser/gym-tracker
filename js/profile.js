@@ -10,6 +10,7 @@ import { openProgress } from "./progress.js";
 import { openWelcome, setLang } from "./welcome.js";
 import { renderAchievements } from "./achievements.js";
 import { storageProtected } from "./offline.js";
+import { icon } from "./icons.js";
 
 // ======================================================================
 // Profile
@@ -69,7 +70,7 @@ export function computeStats() {
 
 export function renderProfile() {
   const name = state.name || "";
-  $("prAvatar").textContent = name ? name.trim().charAt(0).toUpperCase() : "👤";
+  if (name) $("prAvatar").textContent = name.trim().charAt(0).toUpperCase(); else $("prAvatar").innerHTML = icon("user");
   $("prName").textContent = name || t("profile");
   const s = computeStats();
   $("prSince").textContent = s.firstDate ? t("since", { d: fmtLong(s.firstDate) }) : t("noSince");
@@ -78,17 +79,18 @@ export function renderProfile() {
   const card = (label, value, sub) => '<div class="stat"><small>' + esc(label) + '</small><b>' + esc(value) + '</b><span class="sub">' + esc(sub) + '</span></div>';
   $("prStats").innerHTML =
     card(t("stWorkouts"), String(s.workouts), t("stWorkoutsSub", { n: s.workoutsWeek })) +
-    card(t("stStreak"), (s.current ? "🔥 " : "") + s.current, t("stStreakSub", { n: s.best })) +
+    card(t("stStreak"), s.current, t("stStreakSub", { n: s.best })) +
     card(t("stSets"), String(s.sets), t("stSetsSub", { n: s.setsWeek })) +
     card(t("stVolume"), vol, t("stVolumeSub"));
-  $("prFun").textContent = s.volume >= 1500 ? t("funCars", { n: fmtNum(Math.round(s.volume / 1500 * 10) / 10) }) : s.volume > 0 ? t("funStart") : "";
+  $("prFun").innerHTML = s.volume >= 1500 ? esc(t("funCars", { n: fmtNum(Math.round(s.volume / 1500 * 10) / 10) })) + " " + icon("car", "i")
+    : s.volume > 0 ? esc(t("funStart")) + " " + icon("barbell", "i") : "";
 
   const recEl = $("prRecords"); recEl.innerHTML = "";
   if (!s.records.length) { recEl.innerHTML = '<p class="rec-empty"></p>'; recEl.firstChild.textContent = t("recordsEmpty"); }
-  const medals = ["🥇", "🥈", "🥉"];
+  const medals = ["#e8a90c", "#9aa5b1", "#c47a3d"]; // gold, silver, bronze; the rest get a plain medal
   s.records.forEach((r, i) => {
     const row = document.createElement("div"); row.className = "rec";
-    row.innerHTML = '<span class="medal">' + (medals[i] || "🏅") + '</span><span class="rn"><b></b><small></small></span><span class="rv"></span>';
+    row.innerHTML = '<span class="medal small" style="--c:' + (medals[i] || "#8a8f98") + '">' + icon(i < 3 ? "trophy" : "medal") + '</span><span class="rn"><b></b><small></small></span><span class="rv"></span>';
     row.querySelector(".rn b").textContent = r.name;
     row.querySelector(".rn small").textContent = fmtLong(r.date);
     row.querySelector(".rv").innerHTML = esc(fmtNum(r.w) + " " + t("kg")) + (String(r.set.r || "").trim() ? '<small>× ' + esc(String(r.set.r).trim()) + " " + esc(t("reps")) + '</small>' : "");
@@ -99,7 +101,7 @@ export function renderProfile() {
 
   $("exportBtn").querySelector("small").textContent = t("backupD") + " · " +
     (state.lastBackup ? t("lastBackup", { d: fmtLong(new Date(state.lastBackup)) }) : t("lastBackupNever"));
-  $("prStorage").textContent = storageProtected ? t("storageSafe") : t("storageMaybe");
+  $("prStorage").innerHTML = storageProtected ? icon("shield-check", "i") + " " + esc(t("storageSafe")) : esc(t("storageMaybe"));
   renderAchievements();
   const prof = state.profile || {};
   [...$("prSex").children].forEach(b => b.classList.toggle("on", b.dataset.v === (prof.sex || "x")));
