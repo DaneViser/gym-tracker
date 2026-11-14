@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f4f2ee;
@@ -282,6 +282,26 @@
   .hist-table td.w { color: var(--muted); }
   .p-close { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 18px; cursor: pointer; flex: none; }
 
+  /* matrix clock (always dark + green, in both themes, so it stands out) */
+  header.top > div:first-child { min-width: 0; }
+  .hright { display: flex; flex-direction: column; gap: 6px; flex: none; }
+  .mclock {
+    position: relative; height: 36px; border-radius: 11px; overflow: hidden; display: grid; place-items: center;
+    background: #020604; border: 1px solid rgba(57, 255, 136, .35);
+    box-shadow: 0 0 14px rgba(57, 255, 136, .18), inset 0 0 14px rgba(57, 255, 136, .08);
+  }
+  .mclock canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .6; }
+  .mclock::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .28) 2px 3px);
+  }
+  .mclock .mt {
+    position: relative; z-index: 1; font-family: "Share Tech Mono", ui-monospace, "Consolas", monospace;
+    color: #5dffa0; font-size: 21px; letter-spacing: .08em; line-height: 1; font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 6px rgba(57, 255, 136, .85), 0 0 16px rgba(57, 255, 136, .4);
+  }
+  .mclock .ms { font-size: 13px; opacity: .7; letter-spacing: .04em; }
+
   /* backup reminder + update bar */
   .nag {
     display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
@@ -384,10 +404,16 @@
       <p class="hello" id="hello"></p>
       <h1>Gym <span>Tracker</span></h1>
     </div>
-    <div class="btns">
-      <button class="icon-btn" id="progressBtn" data-i18n-aria="progress">📈</button>
-      <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
-      <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial">👤</span></button>
+    <div class="hright">
+      <div class="mclock" id="mclock" role="img">
+        <canvas id="mrain" aria-hidden="true"></canvas>
+        <span class="mt" aria-hidden="true"><span id="mHM">--:--</span><span class="ms" id="mS">:--</span></span>
+      </div>
+      <div class="btns">
+        <button class="icon-btn" id="progressBtn" data-i18n-aria="progress">📈</button>
+        <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
+        <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial">👤</span></button>
+      </div>
     </div>
   </header>
 
@@ -784,7 +810,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.1";
+  const APP_VERSION = "2026-11-14.2";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -1700,6 +1726,54 @@
   }
   $("nagBackup").addEventListener("click", exportBackup);
   $("nagLater").addEventListener("click", () => { state.backupSnooze = Date.now() + 7 * DAY; save(); renderNag(); });
+
+  // ======================================================================
+  // Matrix clock (header)
+  // ======================================================================
+  (function matrixClock() {
+    const pad = n => String(n).padStart(2, "0");
+    function tick() {
+      const d = new Date();
+      $("mHM").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+      $("mS").textContent = ":" + pad(d.getSeconds());
+      $("mclock").setAttribute("aria-label", pad(d.getHours()) + ":" + pad(d.getMinutes()));
+      setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+    }
+    tick();
+
+    // Falling green characters behind the time. Skipped if the phone asks for reduced motion.
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cv = $("mrain"), ctx = cv.getContext("2d");
+    const CHARS = "01アカサタナハマヤラワ23456789ｱｲｳｴｵ";
+    const COL = 7;
+    let cols = [], w = 0, h = 0, dpr = 1, last = 0;
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = cv.clientWidth; h = cv.clientHeight;
+      if (!w || !h) return;
+      cv.width = w * dpr; cv.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Array.from({ length: Math.ceil(w / COL) }, () => Math.random() * -h);
+      ctx.font = "8px monospace";
+    }
+    function frame(ts) {
+      requestAnimationFrame(frame);
+      if (document.hidden || ts - last < 70) return; // ~14 fps is plenty and easy on battery
+      last = ts;
+      if (!w) { size(); if (!w) return; }
+      ctx.fillStyle = "rgba(2, 6, 4, 0.22)";
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < cols.length; i++) {
+        const y = cols[i];
+        ctx.fillStyle = Math.random() < 0.08 ? "#c8ffe0" : "#2bd673";
+        ctx.fillText(CHARS[(Math.random() * CHARS.length) | 0], i * COL, y);
+        cols[i] = y > h + Math.random() * 40 ? Math.random() * -20 : y + 6;
+      }
+    }
+    window.addEventListener("resize", size);
+    size();
+    requestAnimationFrame(frame);
+  })();
 
   // ======================================================================
   // Offline, storage protection, updates
