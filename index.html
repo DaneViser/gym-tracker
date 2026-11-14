@@ -304,6 +304,60 @@
     .hright { gap: 5px; }
   }
 
+  /* achievements */
+  .ach-count { color: var(--accent); font-weight: 800; margin-left: 4px; }
+  .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+  .ach {
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px 10px; text-align: center;
+    cursor: pointer; color: var(--text); font: inherit; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .ach:hover { border-color: var(--muted); }
+  .ach .at { font-size: 12.5px; font-weight: 700; line-height: 1.2; min-height: 30px; display: flex; align-items: center; }
+  .ach .as { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .ach .ab { width: 70%; height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .ach .ab i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .medal {
+    --c: #8a8f98; position: relative; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: #fff; flex: none;
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 55%, color-mix(in srgb, var(--c) 70%, #000));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 40%, transparent), 0 4px 12px color-mix(in srgb, var(--c) 35%, transparent);
+  }
+  .medal svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+  .medal.locked { --c: #6b6f76; background: var(--surface); color: var(--muted); box-shadow: inset 0 0 0 2px var(--line); }
+  .medal.locked svg { opacity: .55; filter: none; }
+  .medal .lk { position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; color: var(--muted); }
+  .medal .lk svg { width: 13px; height: 13px; opacity: 1; }
+  .medal.big { width: 84px; height: 84px; }
+  .medal.big svg { width: 42px; height: 42px; }
+  .medal.small { width: 44px; height: 44px; }
+  .medal.small svg { width: 22px; height: 22px; }
+  .ach-detail { text-align: center; }
+  .ach-detail .medal { margin: 0 auto 10px; }
+  .ach-detail h2 { margin: 0 0 4px; }
+  .ach-detail .ad { color: var(--muted); margin: 0 0 14px; }
+  .ach-detail .note2 { background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; margin: 0 0 12px; text-align: left; }
+  .tiers { list-style: none; padding: 0; margin: 0; text-align: left; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .tiers li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+  .tiers li:last-child { border-bottom: 0; }
+  .tiers .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .tiers .tn { flex: 1; font-weight: 600; }
+  .tiers .tn small { display: block; color: var(--muted); font-weight: 400; font-size: 12.5px; }
+  .tiers .ts { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .tiers li.got .ts { color: var(--ok); font-weight: 700; }
+  .celebrate {
+    position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 90;
+    width: min(92vw, 420px); display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 18px; font: inherit; cursor: pointer;
+    box-shadow: 0 10px 34px rgba(0,0,0,.35); animation: pop .35s cubic-bezier(.2, 1.4, .4, 1);
+  }
+  .celebrate[hidden] { display: none; }
+  .celebrate .ct { flex: 1; min-width: 0; }
+  .celebrate .ct small { display: block; color: var(--accent); font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  .celebrate .ct b { display: block; font-size: 15.5px; overflow-wrap: anywhere; }
+  .celebrate .ct span { display: block; color: var(--muted); font-size: 13px; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.7); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  .pr-inline.bw { max-width: 180px; }
+  @media (max-width: 420px) { .pr-inline.bw { max-width: none; } }
+
   /* backup reminder + update bar */
   .nag {
     display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
@@ -502,6 +556,9 @@
     <div class="stats pr-stats" id="prStats"></div>
     <p class="pr-fun" id="prFun"></p>
 
+    <h3 class="pr-h"><span data-i18n="achTitle"></span> <span class="ach-count" id="achCount"></span></h3>
+    <div class="ach-grid" id="achGrid"></div>
+
     <h3 class="pr-h" data-i18n="records"></h3>
     <div id="prRecords"></div>
 
@@ -516,6 +573,12 @@
       <div class="pr-row"><span data-i18n="themeLbl"></span>
         <div class="seg" id="prTheme"><button type="button" data-v="auto" data-i18n="themeAuto"></button><button type="button" data-v="light" data-i18n="themeLight"></button><button type="button" data-v="dark" data-i18n="themeDark"></button></div>
       </div>
+      <div class="pr-row"><span><b data-i18n="benchFor"></b><small data-i18n="benchForHint"></small></span>
+        <div class="seg" id="prSex"><button type="button" data-v="m" data-i18n="sexM"></button><button type="button" data-v="f" data-i18n="sexF"></button><button type="button" data-v="x" data-i18n="sexX"></button></div>
+      </div>
+      <label class="pr-row"><span><b data-i18n="bwField"></b><small data-i18n="bwHint"></small></span>
+        <span class="pr-inline bw"><input class="txt" id="prBw" type="text" inputmode="decimal" maxlength="6" placeholder="kg"><button class="pill" id="prBwSave" type="button" data-i18n="save"></button></span>
+      </label>
       <button class="pr-row pr-btn" id="prGuide" type="button"><span data-i18n="howTo"></span><span class="chev-r">›</span></button>
     </div>
 
@@ -531,6 +594,17 @@
     <p class="note" id="prStorage"></p>
   </div>
 </div>
+
+<!-- Achievement detail -->
+<div class="modal" id="achModal" role="dialog" aria-modal="true" aria-labelledby="achMTitle">
+  <div class="sheet">
+    <div class="p-top"><span></span><button class="p-close" id="achClose" type="button" data-i18n-aria="close">✕</button></div>
+    <div class="ach-detail" id="achDetail"></div>
+  </div>
+</div>
+
+<!-- Celebration card (new record / achievement unlocked) -->
+<button class="celebrate" id="celebrate" type="button" hidden></button>
 
 <!-- Welcome / guide -->
 <div class="modal" id="welcome" role="dialog" aria-modal="true" aria-labelledby="wTitle">
@@ -660,7 +734,13 @@
       later: "Later", backupNow: "Back up", lastBackup: "Last backup: {d}", lastBackupNever: "Last backup: never",
       backupSaved: "Backup saved 💾", updateReady: "✨ New version — tap to refresh",
       storageSafe: "✓ Your data is protected from automatic clean-up on this phone. Works offline too.",
-      storageMaybe: "The browser may clear data if the app isn't used for weeks, so keep a backup. Works offline too."
+      storageMaybe: "The browser may clear data if the app isn't used for weeks, so keep a backup. Works offline too.",
+      achTitle: "Achievements", achUnlocked: "Achievement unlocked!", newRecord: "New personal record! 🏆", wasPrev: "was {v}",
+      toGo: "{v} to go", unlockedOne: "Unlocked", tierNames: ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Legend"],
+      nowVal: "Now: {v}", needBw: "Add your body weight in Settings (profile) to unlock this one.",
+      benchFor: "Bench milestones", benchForHint: "Separate targets for men and women", sexM: "Men", sexF: "Women", sexX: "General",
+      bwField: "Body weight", bwHint: "Optional, for the bench vs bodyweight badge", saved: "Saved",
+      benchNote: "Targets for: {s}. Change it under Settings in your profile."
     },
     sr: {
       days: ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"],
@@ -734,7 +814,13 @@
       later: "Kasnije", backupNow: "Sačuvaj", lastBackup: "Poslednja kopija: {d}", lastBackupNever: "Poslednja kopija: nikad",
       backupSaved: "Kopija sačuvana 💾", updateReady: "✨ Nova verzija — dodirni za osvežavanje",
       storageSafe: "✓ Podaci su zaštićeni od automatskog brisanja na ovom telefonu. Radi i bez interneta.",
-      storageMaybe: "Pretraživač može obrisati podatke ako se aplikacija ne koristi nedeljama, zato čuvaj kopiju. Radi i bez interneta."
+      storageMaybe: "Pretraživač može obrisati podatke ako se aplikacija ne koristi nedeljama, zato čuvaj kopiju. Radi i bez interneta.",
+      achTitle: "Dostignuća", achUnlocked: "Novo dostignuće!", newRecord: "Novi lični rekord! 🏆", wasPrev: "pre: {v}",
+      toGo: "još {v}", unlockedOne: "Otključano", tierNames: ["Bronza", "Srebro", "Zlato", "Platina", "Dijamant", "Legenda"],
+      nowVal: "Sada: {v}", needBw: "Dodaj telesnu težinu u podešavanjima (profil) da otključaš ovo.",
+      benchFor: "Bench ciljevi", benchForHint: "Posebni ciljevi za muškarce i žene", sexM: "Muškarci", sexF: "Žene", sexX: "Opšte",
+      bwField: "Telesna težina", bwHint: "Opciono, za dostignuće bench naspram težine", saved: "Sačuvano",
+      benchNote: "Ciljevi za: {s}. Možeš da promeniš u podešavanjima profila."
     }
   };
   function setsWord(n) {
@@ -812,7 +898,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.3";
+  const APP_VERSION = "2026-11-14.4";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -831,7 +917,8 @@
   try { const raw = localStorage.getItem(KEY); if (raw) state = JSON.parse(raw); } catch (e) {}
   if (!state || typeof state !== "object" || typeof state.weeks !== "object") state = { weeks: {} };
   if (!Array.isArray(state.program) && Object.keys(state.weeks).length > 0) state.program = starterProgram();
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function saveRaw() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function save() { saveRaw(); scheduleAchCheck(); } // every change may unlock an achievement
 
   try { const th = localStorage.getItem("gymtracker.theme"); if (th) document.documentElement.setAttribute("data-theme", th); } catch (e) {}
 
@@ -1129,7 +1216,7 @@
             const next = rowsEl.children[i + 1];
             if (next) { const ni = next.querySelectorAll("input"); ni[0].placeholder = phW(i + 1); ni[1].placeholder = phR(i + 1); }
           });
-          inp.addEventListener("change", () => { if (autoTick()) render(); });
+          inp.addEventListener("change", () => { checkPR(key, sess, ex, cur); if (autoTick()) render(); });
         });
         rowsEl.appendChild(row);
       });
@@ -1637,6 +1724,10 @@
     $("exportBtn").querySelector("small").textContent = t("backupD") + " · " +
       (state.lastBackup ? t("lastBackup", { d: fmtLong(new Date(state.lastBackup)) }) : t("lastBackupNever"));
     $("prStorage").textContent = storageProtected ? t("storageSafe") : t("storageMaybe");
+    renderAchievements();
+    const prof = state.profile || {};
+    [...$("prSex").children].forEach(b => b.classList.toggle("on", b.dataset.v === (prof.sex || "x")));
+    if (document.activeElement !== $("prBw")) $("prBw").value = prof.bw || "";
     $("prNameInput").value = name;
     [...$("prLang").children].forEach(b => b.classList.toggle("on", b.dataset.v === lang));
     let th = "auto"; try { th = localStorage.getItem("gymtracker.theme") || "auto"; } catch (e) {}
@@ -1648,7 +1739,7 @@
   $("hello").addEventListener("click", openProfile);
   $("prClose").addEventListener("click", closeProfile);
   $("profile").addEventListener("click", e => { if (e.target === $("profile")) closeProfile(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show")) closeProfile(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("profile").classList.contains("show") && !$("achModal").classList.contains("show")) closeProfile(); });
   $("prNameSave").addEventListener("click", () => {
     const v = $("prNameInput").value.trim(); if (!v) { $("prNameInput").focus(); return; }
     state.name = v; save(); render(); renderProfile(); toast(t("nameSaved"));
@@ -1730,6 +1821,257 @@
   $("nagLater").addEventListener("click", () => { state.backupSnooze = Date.now() + 7 * DAY; save(); renderNag(); });
 
   // ======================================================================
+  // Achievements  (icons: Tabler Icons, MIT license, see THIRD_PARTY_LICENSES.md)
+  // ======================================================================
+  // Everything here is DERIVED from state.weeks / state.program, so old history counts.
+  // Only state.achSeen (highest tier already celebrated per badge) is stored, so we know what is new.
+  const ICONS = {
+    award: "M12 9m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0 M12 15l3.4 5.89l1.598 -3.233l3.598 .232l-3.4 -5.889 M6.802 12l-3.4 5.89l3.598 -.233l1.598 3.232l3.4 -5.889",
+    barbell: "M2 12h1 M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2 M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1z M9 12h6 M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1z M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2 M22 12h-1",
+    "calendar-check": "M11.5 21h-5.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6 M16 3v4 M8 3v4 M4 11h16 M15 19l2 2l4 -4",
+    "device-floppy": "M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2 M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M14 4l0 4l-6 0l0 -4",
+    flame: "M12 12c2 -2.96 0 -7 -1 -8c0 3.038 -1.773 4.741 -3 6c-1.226 1.26 -2 3.24 -2 5a6 6 0 1 0 12 0c0 -1.532 -1.056 -3.94 -2 -5c-1.786 3 -2.791 3 -4 2z",
+    "list-check": "M3.5 5.5l1.5 1.5l2.5 -2.5 M3.5 11.5l1.5 1.5l2.5 -2.5 M3.5 17.5l1.5 1.5l2.5 -2.5 M11 6l9 0 M11 12l9 0 M11 18l9 0",
+    lock: "M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0 M8 11v-4a4 4 0 1 1 8 0v4",
+    refresh: "M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4 M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4",
+    scale: "M7 20l10 0 M6 6l6 -1l6 1 M12 3l0 17 M9 12l-3 -6l-3 6a3 3 0 0 0 6 0 M21 12l-3 -6l-3 6a3 3 0 0 0 6 0",
+    sparkles: "M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z",
+    sun: "M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0 M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7",
+    trophy: "M8 21l8 0 M12 17l0 4 M7 4l10 0 M17 4v8a5 5 0 0 1 -10 0v-8 M5 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M19 9m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0",
+    truck: "M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6h-8m0 -5h5l3 5",
+    weight: "M12 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0 M6.835 9h10.33a1 1 0 0 1 .984 .821l1.637 9a1 1 0 0 1 -.984 1.179h-13.604a1 1 0 0 1 -.984 -1.179l1.637 -9a1 1 0 0 1 .984 -.821z"
+  };
+  const icon = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + ICONS[n] + '"/></svg>';
+  const TIER_COLORS = ["#c47a3d", "#9aa5b1", "#e8a90c", "#38bdd1", "#8b6cf0", "#e5484d"]; // bronze → legend
+  const kgTxt = v => fmtNum(v) + " " + t("kg");
+  const tonTxt = v => v >= 1000 ? fmtNum(v / 1000) + " t" : fmtNum(v) + " " + t("kg");
+  const ratioTxt = v => (Math.round(v * 100) / 100).toLocaleString(locale(), { maximumFractionDigits: 2 }) + "×";
+  const plates = n => lang === "sr" ? n + (n === 1 ? " ploča" : n < 5 ? " ploče" : " ploča") + " po strani" : n + (n === 1 ? " plate" : " plates") + " per side";
+
+  // Which exercises count as bench / squat / deadlift: starter ids + common names (EN and SR).
+  const LIFTS = {
+    bench: { inc: /bench|benč|potisak (sa|na) (ravnoj )?klup/i, exc: /incline|decline|kos[aoi]|close.?grip/i },
+    squat: { inc: /squat|čučanj|cucanj/i, exc: /split|bugar|bulgar|goblet|hack|jump|skok/i },
+    deadlift: { inc: /deadlift|mrtvo dizanje/i, exc: /romanian|rumunsk|rdl|stiff|single.?leg|jednoj nozi/i }
+  };
+  function liftOf(exId) {
+    let name = exId;
+    program().forEach(s => s.ex.forEach(e => { if (e.id === exId) name += " " + (e.name || ""); }));
+    for (const k in LIFTS) if (LIFTS[k].inc.test(name) && !LIFTS[k].exc.test(name)) return k;
+    return null;
+  }
+
+  // Bench targets differ by sex because absolute strength differs a lot on average.
+  // Rough ladders based on common strength standards; "x" = general / prefer not to say.
+  const BENCH = { m: [40, 60, 80, 100, 120, 140], f: [20, 30, 40, 50, 60, 80], x: [30, 40, 60, 80, 100, 120] };
+  const BENCH_BW = { m: [0.5, 0.75, 1, 1.25, 1.5], f: [0.35, 0.5, 0.65, 0.8, 1], x: [0.4, 0.6, 0.8, 1, 1.25] };
+
+  // title/desc: [english, serbian]; tiers: thresholds (or a function of the metrics); m: metric name.
+  const ACH = [
+    { id: "workouts", icon: "barbell", m: "workouts", tiers: [1, 10, 50, 100, 250], title: ["Workouts", "Treninzi"], desc: ["Workouts finished: {n}", "Završeni treninzi: {n}"] },
+    { id: "streak", icon: "flame", m: "streak", tiers: [2, 4, 8, 12, 26], title: ["On fire", "U plamenu"], desc: ["Most weeks in a row with a workout: {n}", "Najviše nedelja zaredom sa treningom: {n}"] },
+    { id: "perfect", icon: "calendar-check", m: "perfect", tiers: [1, 5, 10, 25], title: ["Perfect week", "Savršena nedelja"], desc: ["Weeks with every planned workout done: {n}", "Nedelje sa svim planiranim treninzima: {n}"] },
+    { id: "sets", icon: "list-check", m: "sets", tiers: [100, 500, 1000, 2500], title: ["Set machine", "Mašina za serije"], desc: ["Sets logged: {n}", "Upisane serije: {n}"] },
+    { id: "volume", icon: "truck", m: "volume", tiers: [1000, 10000, 50000, 100000], fmt: tonTxt, title: ["Heavy hauler", "Teška kategorija"], desc: ["Total weight lifted: {n}", "Ukupno podignuto: {n}"],
+      labels: [["≈ a small car", "≈ mali auto"], ["≈ a city bus", "≈ gradski autobus"], ["≈ a tank", "≈ tenk"], ["≈ a blue whale", "≈ plavi kit"]] },
+    { id: "records", icon: "trophy", m: "records", tiers: [1, 10, 25, 50], title: ["Record breaker", "Obarač rekorda"], desc: ["Personal records broken: {n}", "Oboreni lični rekordi: {n}"] },
+    { id: "bench", icon: "award", m: "bench", tiers: M => BENCH[M.sex] || BENCH.x, fmt: kgTxt, sexNote: true, title: ["Bench press", "Bench press"], desc: ["Best bench press: {n}", "Najbolji bench press: {n}"] },
+    { id: "benchBw", icon: "scale", m: "benchBw", tiers: M => BENCH_BW[M.sex] || BENCH_BW.x, fmt: ratioTxt, sexNote: true, needsBw: true, title: ["Bench vs bodyweight", "Bench naspram težine"], desc: ["Best bench ÷ your body weight: {n}", "Najbolji bench ÷ tvoja težina: {n}"] },
+    { id: "squat", icon: "weight", m: "squat", tiers: [60, 100, 140, 180], fmt: kgTxt, plates: true, title: ["Squat plate club", "Klub ploča: čučanj"], desc: ["Best squat: {n}", "Najbolji čučanj: {n}"] },
+    { id: "deadlift", icon: "weight", m: "deadlift", tiers: [60, 100, 140, 180, 220], fmt: kgTxt, plates: true, title: ["Deadlift plate club", "Klub ploča: mrtvo dizanje"], desc: ["Best deadlift: {n}", "Najbolje mrtvo dizanje: {n}"] },
+    { id: "weekend", icon: "sun", m: "weekend", tiers: [1, 5, 10], title: ["Weekend warrior", "Vikend ratnik"], desc: ["Weeks with both Saturday and Sunday done: {n}", "Nedelje sa odrađenom i subotom i nedeljom: {n}"] },
+    { id: "comeback", icon: "refresh", m: "comeback", tiers: [1], title: ["Comeback", "Povratak"], desc: ["Train again after 3+ weeks off", "Ponovo treniraj posle 3+ nedelje pauze"] },
+    { id: "backup", icon: "device-floppy", m: "backup", tiers: [1], title: ["Safe keeper", "Čuvar podataka"], desc: ["Save a backup of your data", "Sačuvaj kopiju podataka"] }
+  ];
+
+  const monOf = wk => { const m = /^(\d{4})-W(\d{2})$/.exec(wk); return mondayOfIsoWeek(+m[1], +m[2]); };
+  const heaviest = st => Math.max(-Infinity, ...st.map(x => num(x.w)).filter(v => v != null && v > 0));
+
+  function achMetrics() {
+    const st = computeStats();
+    const byId = {}; program().forEach(s => { byId[s.id] = s; });
+    const dowOf = sid => byId[sid] ? byId[sid].dow : 0;
+    const recs = allSessionRecords().sort((a, b) => a.wk < b.wk ? -1 : a.wk > b.wk ? 1 : dowOf(a.sid) - dowOf(b.sid));
+    const doneBy = {}, bestW = {}, liftCache = {}, lift = { bench: 0, squat: 0, deadlift: 0 };
+    let records = 0;
+    recs.forEach(({ wk, sid, s }) => {
+      if (!s) return;
+      if (s.done) (doneBy[wk] = doneBy[wk] || new Set()).add(sid);
+      new Set([...Object.keys(s.sets || {}), ...Object.keys(s.w || {})]).forEach(exId => {
+        const w = heaviest(filled(setsOf(s, exId)));
+        if (!isFinite(w)) return;
+        if (bestW[exId] != null && w > bestW[exId]) records++; // beat an earlier best
+        bestW[exId] = Math.max(bestW[exId] || 0, w);
+        if (!(exId in liftCache)) liftCache[exId] = liftOf(exId);
+        const l = liftCache[exId]; if (l) lift[l] = Math.max(lift[l], w);
+      });
+    });
+    const active = [...new Set(recs.filter(r => hasActivity(r.s)).map(r => r.wk))].sort();
+    let comeback = 0;
+    for (let i = 1; i < active.length; i++) if ((monOf(active[i]) - monOf(active[i - 1])) / DAY >= 28) comeback++;
+    let perfect = 0, weekend = 0;
+    const plan = program();
+    Object.keys(doneBy).forEach(wk => {
+      const d = doneBy[wk];
+      if (plan.length && plan.every(p => d.has(p.id))) perfect++;
+      const dows = new Set([...d].map(dowOf));
+      if (dows.has(5) && dows.has(6)) weekend++;
+    });
+    const p = state.profile || {}, bw = num(p.bw);
+    return {
+      workouts: st.workouts, streak: st.best, perfect, sets: st.sets, volume: st.volume, records, weekend, comeback,
+      backup: state.lastBackup ? 1 : 0, bench: lift.bench, squat: lift.squat, deadlift: lift.deadlift,
+      benchBw: bw && lift.bench ? lift.bench / bw : 0, hasBw: !!bw, sex: p.sex || "x"
+    };
+  }
+
+  function evalAch() {
+    const M = achMetrics(), L = LI();
+    return ACH.map(a => {
+      const tiers = typeof a.tiers === "function" ? a.tiers(M) : a.tiers;
+      const v = M[a.m] || 0;
+      let level = -1;
+      tiers.forEach((th, i) => { if (v >= th - 1e-9) level = i; });
+      if (a.needsBw && !M.hasBw) level = -1;
+      return { a, tiers, v, level, M, title: a.title[L] };
+    });
+  }
+  const tierColor = (r, i) => r.tiers.length === 1 ? TIER_COLORS[2] : TIER_COLORS[Math.min(i, TIER_COLORS.length - 1)];
+  const tierName = (r, i) => r.tiers.length === 1 ? t("unlockedOne") : t("tierNames")[Math.min(i, 5)];
+  const fmtA = (r, v) => (r.a.fmt || fmtNum)(v);
+  function medalHtml(r, size) {
+    const locked = r.level < 0;
+    return '<span class="medal' + (locked ? " locked" : "") + (size ? " " + size : "") + '"' +
+      (locked ? "" : ' style="--c:' + tierColor(r, r.level) + '"') + '>' + icon(r.a.icon) +
+      (locked ? '<span class="lk">' + icon("lock") + '</span>' : "") + '</span>';
+  }
+
+  function renderAchievements() {
+    const list = evalAch();
+    $("achCount").textContent = list.filter(r => r.level >= 0).length + "/" + list.length;
+    const g = $("achGrid"); g.innerHTML = "";
+    list.forEach(r => {
+      const next = r.tiers[r.level + 1];
+      const noBw = r.a.needsBw && !r.M.hasBw;
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "ach";
+      b.innerHTML = medalHtml(r) + '<span class="at"></span><span class="as"></span>' +
+        (next != null && !noBw && r.tiers.length > 1 ? '<span class="ab"><i style="width:' + Math.max(0, Math.min(100, r.v / next * 100)).toFixed(0) + '%"></i></span>' : "");
+      b.querySelector(".at").textContent = r.title;
+      b.querySelector(".as").textContent = r.level >= 0 ? tierName(r, r.level) : noBw ? "—" : r.tiers.length === 1 ? "🔒" : fmtA(r, r.v) + " / " + fmtA(r, next);
+      b.addEventListener("click", () => openAch(r.a.id));
+      g.appendChild(b);
+    });
+  }
+
+  function openAch(id) {
+    const r = evalAch().find(x => x.a.id === id); if (!r) return;
+    const L = LI(), el = $("achDetail"), noBw = r.a.needsBw && !r.M.hasBw;
+    el.innerHTML = medalHtml(r, "big") + '<h2 id="achMTitle"></h2><p class="ad"></p>' +
+      (noBw || r.a.sexNote ? '<p class="note2"></p>' : "") + '<ul class="tiers"></ul>';
+    el.querySelector("h2").textContent = r.title;
+    el.querySelector(".ad").textContent = r.a.desc[L].replace("{n}", fmtA(r, r.v));
+    if (noBw) el.querySelector(".note2").textContent = t("needBw");
+    else if (r.a.sexNote) el.querySelector(".note2").textContent = t("benchNote", { s: t({ m: "sexM", f: "sexF", x: "sexX" }[r.M.sex]) });
+    const ul = el.querySelector(".tiers");
+    r.tiers.forEach((th, i) => {
+      const got = i <= r.level, single = r.tiers.length === 1;
+      const li = document.createElement("li"); if (got) li.className = "got";
+      li.innerHTML = '<span class="dot"></span><span class="tn"><span class="tl"></span><small></small></span><span class="ts"></span>';
+      li.querySelector(".dot").style.background = tierColor(r, i);
+      li.querySelector(".tl").textContent = single ? r.title : tierName(r, i) + " · " + fmtA(r, th);
+      li.querySelector("small").textContent = r.a.labels ? r.a.labels[i][L] : r.a.plates ? plates(i + 1) : "";
+      li.querySelector(".ts").textContent = got ? "✓" : single || noBw ? "🔒" : t("toGo", { v: fmtA(r, th - r.v) });
+      ul.appendChild(li);
+    });
+    $("achModal").classList.add("show"); document.body.classList.add("modal-open");
+  }
+  function closeAch() {
+    $("achModal").classList.remove("show");
+    if (!document.querySelector(".modal.show")) document.body.classList.remove("modal-open");
+  }
+  $("achClose").addEventListener("click", closeAch);
+  $("achModal").addEventListener("click", e => { if (e.target === $("achModal")) closeAch(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("achModal").classList.contains("show")) closeAch(); });
+
+  // Pop-up card at the top for new records and unlocked badges (queued, one at a time).
+  const celebQ = []; let celebBusy = false, celebTimer = null;
+  function celebrate(item) { celebQ.push(item); if (!celebBusy) nextCeleb(); }
+  function nextCeleb() {
+    const c = $("celebrate"), item = celebQ.shift();
+    if (!item) { celebBusy = false; c.hidden = true; return; }
+    celebBusy = true;
+    c.innerHTML = item.html;
+    c.onclick = () => { clearTimeout(celebTimer); c.hidden = true; if (item.ach) { openProfile(); openAch(item.ach); } setTimeout(nextCeleb, 200); };
+    c.hidden = false; c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
+    buzz([30, 60, 30, 60, 80]);
+    celebTimer = setTimeout(() => { c.hidden = true; setTimeout(nextCeleb, 250); }, 3400);
+  }
+
+  var achTimer = null; // var: save() may run before this line in edge cases
+  function scheduleAchCheck() { clearTimeout(achTimer); achTimer = setTimeout(checkAchievements, 700); }
+  // Bench badges are tracked per ladder (men / women / general), so switching never loses or fakes progress.
+  const seenKey = r => r.a.sexNote ? r.a.id + ":" + r.M.sex : r.a.id;
+  function markSeenSilently(filter) {
+    state.achSeen = state.achSeen || {};
+    evalAch().filter(filter).forEach(r => { const k = seenKey(r); state.achSeen[k] = Math.max(state.achSeen[k] != null ? state.achSeen[k] : -1, r.level); });
+  }
+  function checkAchievements() {
+    if (!state.onboarded) return;
+    // First run (or after an update): remember current levels silently, no flood of pop-ups.
+    if (!state.achSeen) { markSeenSilently(() => true); saveRaw(); return; }
+    const list = evalAch();
+    let changed = false;
+    list.forEach(r => {
+      const k = seenKey(r), seen = state.achSeen[k] != null ? state.achSeen[k] : -1;
+      if (r.level <= seen) return;
+      state.achSeen[k] = r.level; changed = true;
+      const sub = r.tiers.length === 1 ? r.a.desc[LI()].replace("{n}", "") : tierName(r, r.level) + " · " + fmtA(r, r.tiers[r.level]);
+      celebrate({ ach: r.a.id, html: medalHtml(r, "small") + '<span class="ct"><small>' + esc(t("achUnlocked")) + '</small><b>' + esc(r.title) + '</b><span>' + esc(sub) + '</span></span>' });
+    });
+    if (changed) { saveRaw(); if ($("profile").classList.contains("show")) renderProfile(); }
+  }
+
+  // New personal record while logging sets (heavier than anything logged before for this exercise).
+  const prShown = {};
+  function bestWeightExcept(exId, key, sid) {
+    let best = null;
+    for (const wk in state.weeks) for (const s2 in state.weeks[wk]) {
+      if (wk === key && s2 === sid) continue;
+      const w = heaviest(filled(setsOf(state.weeks[wk][s2], exId)));
+      if (isFinite(w) && (best == null || w > best)) best = w;
+    }
+    return best;
+  }
+  function checkPR(key, sess, ex, cur) {
+    const w = heaviest(filled(cur));
+    if (!isFinite(w)) return;
+    const k = key + ":" + sess.id + ":" + ex.id;
+    let prev = bestWeightExcept(ex.id, key, sess.id);
+    if (prev == null) return; // first time logging this exercise: nothing to beat yet
+    prev = Math.max(prev, prShown[k] || 0); // a record earlier in this same session counts too
+    if (w <= prev) return;
+    prShown[k] = w;
+    const name = tr("e", ex.id, "name", ex.name) || t("unnamedEx");
+    celebrate({ html: '<span class="medal small" style="--c:' + TIER_COLORS[2] + '">' + icon("trophy") + '</span>' +
+      '<span class="ct"><small>' + esc(t("newRecord")) + '</small><b>' + esc(name + ": " + kgTxt(w)) + '</b><span>' + esc(t("wasPrev", { v: kgTxt(prev) })) + '</span></span>' });
+  }
+
+  // Profile settings for bench targets
+  $("prSex").addEventListener("click", e => {
+    const b = e.target.closest("button[data-v]"); if (!b) return;
+    state.profile = Object.assign({}, state.profile, { sex: b.dataset.v });
+    markSeenSilently(r => r.a.sexNote); // switching ladders is not an achievement (entering body weight still celebrates)
+    save(); renderProfile();
+  });
+  $("prBwSave").addEventListener("click", () => {
+    const n = num($("prBw").value);
+    state.profile = Object.assign({}, state.profile, { bw: n && n >= 25 && n <= 350 ? String(n) : "" });
+    save(); renderProfile(); toast(t("saved"));
+  });
+  $("prBw").addEventListener("keydown", e => { if (e.key === "Enter") $("prBwSave").click(); });
+
+  // ======================================================================
   // Gym clock (header)
   // ======================================================================
   (function gymClock() {
@@ -1791,6 +2133,7 @@
   applyStatic();
   render();
   protectStorage();
+  checkAchievements();
   if (!state.name || !state.onboarded) openWelcome("first");
 })();
 </script>

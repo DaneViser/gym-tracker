@@ -21,6 +21,7 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `manifest.webmanifest` | "Add to home screen" settings (name, colors, icons). |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons (orange square, white dumbbell). |
 | `.gitignore` | Ignores `.claude/`. |
+| `THIRD_PARTY_LICENSES.md` | License for the Tabler icons (MIT). Keep it when using their icons. |
 | `AGENTS.md` / `CLAUDE.md` | This guide. `CLAUDE.md` just imports it. |
 
 ## Map of `index.html` (search for these markers; line numbers drift)
@@ -43,6 +44,7 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `// Welcome / guide / language` | First-visit flow, `setLang()`. |
 | `// Profile` | `computeStats()`, `renderProfile()`, theme, delete-all. |
 | `// Controls` | Remaining button handlers, backup export (`exportBackup`) / import. |
+| `// Achievements` | `ICONS` (Tabler, MIT), `ACH` badge list, `achMetrics()`, `evalAch()`, profile grid, detail sheet, `celebrate()` pop-ups, `checkPR()` new-record pop-up, men/women/general bench ladders (`BENCH`, `BENCH_BW`). |
 | `// Gym clock (header)` | Red LED-style clock above the header buttons (CSS: `/* gym clock`). |
 | `// Backup reminder` | `renderNag()`: banner if no backup after 14 days of use, or last one > 30 days old. |
 | `// Offline, storage protection, updates` | Service worker registration, `navigator.storage.persist()`, new-version check. |
@@ -80,7 +82,15 @@ state = {
 }
 ```
 
-Also on `state`: `lastBackup` (ms timestamp of last backup), `backupSnooze` (ms; reminder hidden until then).
+Also on `state`: `lastBackup` (ms timestamp of last backup), `backupSnooze` (ms; reminder hidden until then),
+`profile: { sex: "m" | "f" | "x", bw: "80" }` (optional, for bench badges), and `achSeen: { badgeId: tierIndex }`
+(highest tier already celebrated; bench badges use `"bench:m"` etc.). Achievements themselves are never stored:
+they are recalculated from `weeks` + `program`, so changing thresholds is safe.
+
+**Add an achievement**: add an entry to `ACH` (`id`, Tabler `icon` name present in `ICONS`, metric `m`,
+`tiers`, `title`/`desc` as `[en, sr]`); compute the metric in `achMetrics()` if it is new. New icons: copy the
+`d` paths from the same Tabler version (`@tabler/icons` 3.19.0, `icons/outline/<name>.svg`) and list the icon in
+`THIRD_PARTY_LICENSES.md`. Only use icon sets with MIT/ISC-style licenses.
 
 Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto).
 
