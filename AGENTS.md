@@ -17,6 +17,7 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | File | What it is |
 |---|---|
 | `index.html` | The whole app. ~1650 lines. |
+| `sw.js` | Service worker: keeps a copy of the app on the phone so it works offline. |
 | `manifest.webmanifest` | "Add to home screen" settings (name, colors, icons). |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | App icons (orange square, white dumbbell). |
 | `.gitignore` | Ignores `.claude/`. |
@@ -41,7 +42,20 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `// Progress charts` | `entriesFor()`, `openProgress()`, `renderProgress()` (hand-made SVG, no chart library). |
 | `// Welcome / guide / language` | First-visit flow, `setLang()`. |
 | `// Profile` | `computeStats()`, `renderProfile()`, theme, delete-all. |
-| `// Controls` | Remaining button handlers, backup export/import, startup. |
+| `// Controls` | Remaining button handlers, backup export (`exportBackup`) / import. |
+| `// Backup reminder` | `renderNag()`: banner if no backup after 14 days of use, or last one > 30 days old. |
+| `// Offline, storage protection, updates` | Service worker registration, `navigator.storage.persist()`, new-version check. |
+
+## Offline and updates (read before deploying)
+
+- `sw.js` serves `index.html` **network first** (online = newest version; offline or > 4 s = saved copy)
+  and icons/manifest **cache first**.
+- **Bump `APP_VERSION` in `index.html` on every deploy** (e.g. `"2026-11-20.1"`). Phones that have the
+  app open compare it with the live file and show "New version — tap to refresh". Forgetting it is not
+  harmful (the next fresh open still gets the new version), the bar just won't appear.
+- **Bump `CACHE` in `sw.js`** (e.g. `"gym-tracker-v2"`) only when icons or the manifest change.
+- Service workers do not run in every embedded preview browser. Test offline in real Chrome/Edge
+  (DevTools → Application → Service workers → "Offline").
 
 ## Data model (localStorage key `gymtracker.v1`)
 
@@ -64,6 +78,8 @@ state = {
       } } }
 }
 ```
+
+Also on `state`: `lastBackup` (ms timestamp of last backup), `backupSnooze` (ms; reminder hidden until then).
 
 Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto).
 
@@ -107,7 +123,7 @@ add its label keys to both languages.
 Serve the folder (any static server). The one used so far, run from the repo folder:
 
 ```bash
-node -e "const fs=require('fs'),p=require('path');const T={'.html':'text/html; charset=utf-8','.png':'image/png','.webmanifest':'application/manifest+json'};require('http').createServer((q,s)=>{let f=decodeURIComponent(q.url.split('?')[0]).replace(/^\/+/,'')||'index.html';f=p.basename(f);fs.readFile(f,(e,d)=>{s.writeHead(e?404:200,{'Content-Type':T[p.extname(f)]||'text/plain'});s.end(e?'not found':d)})}).listen(5173)"
+node -e "const fs=require('fs'),p=require('path');const T={'.html':'text/html; charset=utf-8','.js':'text/javascript','.png':'image/png','.webmanifest':'application/manifest+json'};require('http').createServer((q,s)=>{let f=decodeURIComponent(q.url.split('?')[0]).replace(/^\/+/,'')||'index.html';f=p.basename(f);fs.readFile(f,(e,d)=>{s.writeHead(e?404:200,{'Content-Type':T[p.extname(f)]||'text/plain'});s.end(e?'not found':d)})}).listen(5173)"
 ```
 
 Open http://localhost:5173 at a 375×812 viewport. Check both languages (profile → Language),
@@ -137,6 +153,7 @@ Phones may cache the old page for up to ~10 minutes.
 
 ## Before you finish, check
 
+- [ ] `APP_VERSION` bumped in `index.html`.
 - [ ] Both `en` and `sr` strings added for anything new.
 - [ ] No console errors; works at 375 px; dark and light both readable.
 - [ ] Old saved data still loads (don't break the data model).

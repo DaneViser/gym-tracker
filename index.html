@@ -282,6 +282,24 @@
   .hist-table td.w { color: var(--muted); }
   .p-close { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 18px; cursor: pointer; flex: none; }
 
+  /* backup reminder + update bar */
+  .nag {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); border-radius: 16px;
+  }
+  .nag[hidden] { display: none; }
+  .nag .nt { flex: 1; min-width: 0; font-size: 14px; }
+  .nag .nt b { display: block; }
+  .nag .nt small { color: var(--muted); font-size: 12.5px; }
+  .nag .na { display: flex; gap: 6px; flex: none; }
+  .update-bar {
+    position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 70;
+    background: var(--text); color: var(--bg); border: 0; border-radius: 99px; padding: 10px 16px; font: inherit; font-weight: 700; font-size: 14px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.25); cursor: pointer; white-space: nowrap;
+  }
+  .update-bar[hidden] { display: none; }
+  @media (max-width: 420px) { .nag { flex-wrap: wrap; } .nag .na { flex-basis: 100%; } .nag .na .pill { flex: 1; justify-content: center; } }
+
   /* profile */
   .avatar-btn { padding: 0; }
   .avatar-btn span { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 800; }
@@ -386,6 +404,11 @@
     <div class="history" id="history"></div>
   </section>
 
+  <div class="nag" id="nag" hidden>
+    <div class="nt"><b data-i18n="nagTitle"></b><small id="nagText"></small></div>
+    <div class="na"><button class="pill" id="nagLater" type="button" data-i18n="later"></button><button class="pill primary" id="nagBackup" type="button" data-i18n="backupNow"></button></div>
+  </div>
+
   <main id="sessions"></main>
   <button class="add-workout" id="addWorkout" type="button" data-i18n="addWorkout"></button>
 
@@ -410,6 +433,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<button class="update-bar" id="updateBar" type="button" hidden data-i18n="updateReady"></button>
 
 <div class="timer" id="timer">
   <div class="tbar" id="tbar"></div>
@@ -476,6 +500,7 @@
     </div>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
     <p class="note" data-i18n="localNote"></p>
+    <p class="note" id="prStorage"></p>
   </div>
 </div>
 
@@ -601,7 +626,13 @@
       stWorkouts: "Workouts done", stWorkoutsSub: "{n} this week", stStreak: "Week streak", stStreakSub: "best: {n}",
       stSets: "Sets logged", stSetsSub: "{n} this week", stVolume: "Total lifted", stVolumeSub: "weight × reps, all sets",
       funCars: "That's about {n} cars 🚗", funStart: "Keep going, the first tonne is close 💪",
-      recordsEmpty: "Log weights in your sets and your best lifts show up here."
+      recordsEmpty: "Log weights in your sets and your best lifts show up here.",
+      nagTitle: "💾 Back up your workouts?", nagNever: "You haven't saved a backup yet. It takes one tap.",
+      nagOld: "Your last backup was {d}. Save a fresh one in case this phone clears its data.",
+      later: "Later", backupNow: "Back up", lastBackup: "Last backup: {d}", lastBackupNever: "Last backup: never",
+      backupSaved: "Backup saved 💾", updateReady: "✨ New version — tap to refresh",
+      storageSafe: "✓ Your data is protected from automatic clean-up on this phone. Works offline too.",
+      storageMaybe: "The browser may clear data if the app isn't used for weeks, so keep a backup. Works offline too."
     },
     sr: {
       days: ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"],
@@ -669,7 +700,13 @@
       stWorkouts: "Završenih treninga", stWorkoutsSub: "{n} ove nedelje", stStreak: "Nedelja zaredom", stStreakSub: "najbolje: {n}",
       stSets: "Upisanih serija", stSetsSub: "{n} ove nedelje", stVolume: "Ukupno podignuto", stVolumeSub: "težina × ponavljanja, sve serije",
       funCars: "To je otprilike {n} automobila 🚗", funStart: "Samo nastavi, prva tona je blizu 💪",
-      recordsEmpty: "Upiši težine u serije i ovde će se pojaviti tvoja najbolja dizanja."
+      recordsEmpty: "Upiši težine u serije i ovde će se pojaviti tvoja najbolja dizanja.",
+      nagTitle: "💾 Sačuvaj kopiju treninga?", nagNever: "Još nema sačuvane kopije. Potreban je samo jedan dodir.",
+      nagOld: "Poslednja kopija je od {d}. Sačuvaj novu, za slučaj da telefon obriše podatke.",
+      later: "Kasnije", backupNow: "Sačuvaj", lastBackup: "Poslednja kopija: {d}", lastBackupNever: "Poslednja kopija: nikad",
+      backupSaved: "Kopija sačuvana 💾", updateReady: "✨ Nova verzija — dodirni za osvežavanje",
+      storageSafe: "✓ Podaci su zaštićeni od automatskog brisanja na ovom telefonu. Radi i bez interneta.",
+      storageMaybe: "Pretraživač može obrisati podatke ako se aplikacija ne koristi nedeljama, zato čuvaj kopiju. Radi i bez interneta."
     }
   };
   function setsWord(n) {
@@ -745,6 +782,9 @@
   // State
   // ======================================================================
   const KEY = "gymtracker.v1";
+  // Bump on every deploy (any format). Phones that have the app open compare this with the
+  // live index.html and show a "New version — tap to refresh" bar when it differs.
+  const APP_VERSION = "2026-11-14.1";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -867,6 +907,7 @@
     $("bar").firstElementChild.style.width = (total ? n / total * 100 : 0) + "%";
     $("bar").classList.toggle("full", total > 0 && n === total);
     renderHistory(key);
+    renderNag();
 
     const container = $("sessions");
     container.innerHTML = "";
@@ -1565,6 +1606,9 @@
       recEl.appendChild(row);
     });
 
+    $("exportBtn").querySelector("small").textContent = t("backupD") + " · " +
+      (state.lastBackup ? t("lastBackup", { d: fmtLong(new Date(state.lastBackup)) }) : t("lastBackupNever"));
+    $("prStorage").textContent = storageProtected ? t("storageSafe") : t("storageMaybe");
     $("prNameInput").value = name;
     [...$("prLang").children].forEach(b => b.classList.toggle("on", b.dataset.v === lang));
     let th = "auto"; try { th = localStorage.getItem("gymtracker.theme") || "auto"; } catch (e) {}
@@ -1606,14 +1650,83 @@
     if (program().length && !confirm(t("replaceConfirm"))) return;
     state.program = starterProgram(); editing.clear(); save(); render(); renderProfile(); toast(t("starterLoaded"));
   });
-  $("exportBtn").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  // Phones: open the share sheet (save to Files / Drive / send to yourself). Computers: download.
+  async function exportBackup() {
+    const fname = "gym-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    const json = JSON.stringify(state, null, 2);
+    const done = () => { state.lastBackup = Date.now(); save(); renderNag(); if ($("profile").classList.contains("show")) renderProfile(); toast(t("backupSaved")); };
+    const touch = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+    if (touch && typeof File === "function" && navigator.canShare) {
+      try {
+        const file = new File([json], fname, { type: "application/json" });
+        if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: fname }); done(); return; }
+      } catch (e) { if (e && e.name === "AbortError") return; }
+    }
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "gym-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    a.download = fname;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  });
+    done();
+  }
+  $("exportBtn").addEventListener("click", exportBackup);
+
+  // ======================================================================
+  // Backup reminder
+  // ======================================================================
+  const DAY = 864e5;
+  function firstActivity() {
+    let first = null;
+    Object.keys(state.weeks).forEach(wk => {
+      const m = /^(\d{4})-W(\d{2})$/.exec(wk); if (!m) return;
+      const w = state.weeks[wk];
+      if (Object.values(w).some(hasActivity)) { const mon = mondayOfIsoWeek(+m[1], +m[2]); if (!first || mon < first) first = mon; }
+    });
+    return first;
+  }
+  // Show when: there is real data, and no backup yet after 2 weeks of use, or the last one is > 30 days old.
+  function renderNag() {
+    const now = Date.now();
+    let show = false, text = "";
+    if (state.onboarded && !(state.backupSnooze > now)) {
+      const first = firstActivity();
+      if (first) {
+        if (!state.lastBackup) { show = now - first.getTime() >= 14 * DAY; text = t("nagNever"); }
+        else { show = now - state.lastBackup >= 30 * DAY; text = t("nagOld", { d: fmtLong(new Date(state.lastBackup)) }); }
+      }
+    }
+    $("nag").hidden = !show;
+    if (show) $("nagText").textContent = text;
+  }
+  $("nagBackup").addEventListener("click", exportBackup);
+  $("nagLater").addEventListener("click", () => { state.backupSnooze = Date.now() + 7 * DAY; save(); renderNag(); });
+
+  // ======================================================================
+  // Offline, storage protection, updates
+  // ======================================================================
+  let storageProtected = null;
+  function protectStorage() {
+    try {
+      if (!navigator.storage || !navigator.storage.persist) return;
+      navigator.storage.persisted().then(p => p || navigator.storage.persist()).then(p => { storageProtected = !!p; }).catch(() => {});
+    } catch (e) {}
+  }
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+  // When the app comes back to the screen, check (at most every 30 min) whether a newer version is live.
+  let lastCheck = Date.now();
+  async function checkForUpdate() {
+    if (!navigator.onLine || Date.now() - lastCheck < 30 * 60 * 1000) return;
+    lastCheck = Date.now();
+    try {
+      const html = await (await fetch("./?check=" + Date.now(), { cache: "no-store" })).text();
+      const m = /const APP_VERSION = "([^"]+)"/.exec(html);
+      if (m && m[1] !== APP_VERSION) $("updateBar").hidden = false;
+    } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
+  $("updateBar").addEventListener("click", () => location.reload());
   $("importBtn").addEventListener("click", () => $("importFile").click());
   $("importFile").addEventListener("change", e => {
     const f = e.target.files[0]; if (!f) return;
@@ -1634,6 +1747,7 @@
 
   applyStatic();
   render();
+  protectStorage();
   if (!state.name || !state.onboarded) openWelcome("first");
 })();
 </script>
