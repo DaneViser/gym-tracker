@@ -738,9 +738,10 @@
       achTitle: "Achievements", achUnlocked: "Achievement unlocked!", newRecord: "New personal record! 🏆", wasPrev: "was {v}",
       toGo: "{v} to go", unlockedOne: "Unlocked", tierNames: ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Legend"],
       nowVal: "Now: {v}", needBw: "Add your body weight in Settings (profile) to unlock this one.",
-      benchFor: "Bench milestones", benchForHint: "Separate targets for men and women", sexM: "Men", sexF: "Women", sexX: "General",
+      benchFor: "Strength milestones", benchForHint: "Separate targets for men and women", sexM: "Men", sexF: "Women", sexX: "General",
       bwField: "Body weight", bwHint: "Optional, for the bench vs bodyweight badge", saved: "Saved",
-      benchNote: "Targets for: {s}. Change it under Settings in your profile."
+      benchNote: "Targets for: {s}. Change it under Settings in your profile.",
+      countsAs: "Counts exercises named like: {n}. Assisted, machine and easier variants don't count."
     },
     sr: {
       days: ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"],
@@ -818,9 +819,10 @@
       achTitle: "Dostignuća", achUnlocked: "Novo dostignuće!", newRecord: "Novi lični rekord! 🏆", wasPrev: "pre: {v}",
       toGo: "još {v}", unlockedOne: "Otključano", tierNames: ["Bronza", "Srebro", "Zlato", "Platina", "Dijamant", "Legenda"],
       nowVal: "Sada: {v}", needBw: "Dodaj telesnu težinu u podešavanjima (profil) da otključaš ovo.",
-      benchFor: "Bench ciljevi", benchForHint: "Posebni ciljevi za muškarce i žene", sexM: "Muškarci", sexF: "Žene", sexX: "Opšte",
+      benchFor: "Ciljevi snage", benchForHint: "Posebni ciljevi za muškarce i žene", sexM: "Muškarci", sexF: "Žene", sexX: "Opšte",
       bwField: "Telesna težina", bwHint: "Opciono, za dostignuće bench naspram težine", saved: "Sačuvano",
-      benchNote: "Ciljevi za: {s}. Možeš da promeniš u podešavanjima profila."
+      benchNote: "Ciljevi za: {s}. Možeš da promeniš u podešavanjima profila.",
+      countsAs: "Računaju se vežbe sa nazivom kao: {n}. Asistirane, mašinske i lakše varijante se ne računaju."
     }
   };
   function setsWord(n) {
@@ -898,7 +900,7 @@
   const KEY = "gymtracker.v1";
   // Bump on every deploy (any format). Phones that have the app open compare this with the
   // live index.html and show a "New version — tap to refresh" bar when it differs.
-  const APP_VERSION = "2026-11-14.4";
+  const APP_VERSION = "2026-11-14.5";
   const uid = p => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -1826,6 +1828,10 @@
   // Everything here is DERIVED from state.weeks / state.program, so old history counts.
   // Only state.achSeen (highest tier already celebrated per badge) is stored, so we know what is new.
   const ICONS = {
+    "arrow-bar-to-up": "M12 10l0 10 M12 10l4 4 M12 10l-4 4 M4 4l16 0",
+    "chevrons-up": "M7 11l5 -5l5 5 M7 17l5 -5l5 5",
+    "chevrons-down": "M7 7l5 5l5 -5 M7 13l5 5l5 -5",
+    walk: "M13 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0 M7 21l3 -4 M16 21l-2 -4l-3 -3l1 -6 M6 12l2 -3l4 -1l3 3l3 1",
     award: "M12 9m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0 M12 15l3.4 5.89l1.598 -3.233l3.598 .232l-3.4 -5.889 M6.802 12l-3.4 5.89l3.598 -.233l1.598 3.232l3.4 -5.889",
     barbell: "M2 12h1 M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2 M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1z M9 12h6 M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1z M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2 M22 12h-1",
     "calendar-check": "M11.5 21h-5.5a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v6 M16 3v4 M8 3v4 M4 11h16 M15 19l2 2l4 -4",
@@ -1848,11 +1854,17 @@
   const ratioTxt = v => (Math.round(v * 100) / 100).toLocaleString(locale(), { maximumFractionDigits: 2 }) + "×";
   const plates = n => lang === "sr" ? n + (n === 1 ? " ploča" : n < 5 ? " ploče" : " ploča") + " po strani" : n + (n === 1 ? " plate" : " plates") + " per side";
 
-  // Which exercises count as bench / squat / deadlift: starter ids + common names (EN and SR).
+  // Which exercises count for each lift badge: starter ids + common names (EN and SR).
+  // reps: true = measured by best reps in one set (bodyweight moves), otherwise heaviest weight.
+  // Variants that would inflate numbers (incline, split squat, Romanian, assisted, machine…) are excluded.
   const LIFTS = {
-    bench: { inc: /bench|benč|potisak (sa|na) (ravnoj )?klup/i, exc: /incline|decline|kos[aoi]|close.?grip/i },
+    bench: { inc: /bench|benč|potisak (sa|na) (ravnoj )?klup/i, exc: /incline|decline|kos[aoi]|close.?grip|dip/i },
     squat: { inc: /squat|čučanj|cucanj/i, exc: /split|bugar|bulgar|goblet|hack|jump|skok/i },
-    deadlift: { inc: /deadlift|mrtvo dizanje/i, exc: /romanian|rumunsk|rdl|stiff|single.?leg|jednoj nozi/i }
+    deadlift: { inc: /deadlift|mrtvo dizanje/i, exc: /romanian|rumunsk|rdl|stiff|single.?leg|jednoj nozi/i },
+    ohp: { inc: /overhead press|\bohp\b|military press|potisak iznad glave|vojnički potisak/i, exc: /machine|mašin|seated|sedeći|sede/i },
+    pullups: { inc: /pull.?ups?|chin.?ups?|zgib/i, exc: /assist|asist|band|gum[ae]|negativ|lat|pulldown|mašin|machine/i, reps: true },
+    dips: { inc: /\bdips?\b|propadanj|razboj/i, exc: /bench dip|assist|asist|mašin|machine|klup/i, reps: true },
+    farmer: { inc: /farmer|farmersk/i, exc: /^$/ }
   };
   function liftOf(exId) {
     let name = exId;
@@ -1861,10 +1873,28 @@
     return null;
   }
 
-  // Bench targets differ by sex because absolute strength differs a lot on average.
-  // Rough ladders based on common strength standards; "x" = general / prefer not to say.
-  const BENCH = { m: [40, 60, 80, 100, 120, 140], f: [20, 30, 40, 50, 60, 80], x: [30, 40, 60, 80, 100, 120] };
-  const BENCH_BW = { m: [0.5, 0.75, 1, 1.25, 1.5], f: [0.35, 0.5, 0.65, 0.8, 1], x: [0.4, 0.6, 0.8, 1, 1.25] };
+  // Targets differ by sex because absolute strength differs a lot on average.
+  // Rough ladders loosely based on common strength standards (beginner → elite);
+  // "x" = general / prefer not to say. Weights in kg, pull-ups/dips in reps, farmer's walk = kg per hand.
+  const LADDERS = {
+    bench:    { m: [40, 60, 80, 100, 120, 140], f: [20, 30, 40, 50, 60, 80],    x: [30, 40, 60, 80, 100, 120] },
+    benchBw:  { m: [0.5, 0.75, 1, 1.25, 1.5],   f: [0.35, 0.5, 0.65, 0.8, 1],   x: [0.4, 0.6, 0.8, 1, 1.25] },
+    squat:    { m: [60, 100, 140, 180, 220],     f: [40, 60, 80, 100, 120, 140], x: [60, 80, 100, 140, 180] },
+    deadlift: { m: [60, 100, 140, 180, 220, 260], f: [40, 60, 80, 100, 140, 180], x: [60, 100, 140, 180, 220] },
+    ohp:      { m: [30, 40, 50, 60, 80, 100],    f: [15, 20, 25, 30, 40, 50],    x: [20, 30, 40, 50, 60, 80] },
+    pullups:  { m: [1, 5, 10, 15, 20, 25],       f: [1, 3, 5, 8, 12, 15],        x: [1, 3, 5, 10, 15, 20] },
+    dips:     { m: [5, 10, 15, 20, 30],          f: [1, 5, 10, 15, 20],          x: [3, 8, 12, 20, 25] },
+    farmer:   { m: [20, 30, 40, 50, 60, 80],     f: [10, 15, 20, 25, 30, 40],    x: [15, 20, 30, 40, 50, 60] }
+  };
+  const ladder = id => M => LADDERS[id][M.sex] || LADDERS[id].x;
+  const repsTxt = v => fmtNum(v) + " " + (lang === "en" && v === 1 ? "rep" : t("reps"));
+  // Shown on lift badges so people know what to name an exercise for it to count.
+  const LIFT_NAMES = {
+    bench: "Bench press", squat: ["Squat, Front squat", "Čučanj, Squat"], deadlift: ["Deadlift, Sumo deadlift", "Mrtvo dizanje, Deadlift"],
+    ohp: ["Overhead press, Military press", "Potisak iznad glave, Military press"], pullups: ["Pull-ups, Chin-ups", "Zgibovi, Pull-ups"],
+    dips: ["Dips", "Propadanja, Dips"], farmer: ["Farmer's walk / carry", "Farmerski hod, Farmer's walk"]
+  };
+  const perHandTxt = v => fmtNum(v) + " " + t("kg") + " " + (lang === "sr" ? "po ruci" : "per hand");
 
   // title/desc: [english, serbian]; tiers: thresholds (or a function of the metrics); m: metric name.
   const ACH = [
@@ -1875,10 +1905,14 @@
     { id: "volume", icon: "truck", m: "volume", tiers: [1000, 10000, 50000, 100000], fmt: tonTxt, title: ["Heavy hauler", "Teška kategorija"], desc: ["Total weight lifted: {n}", "Ukupno podignuto: {n}"],
       labels: [["≈ a small car", "≈ mali auto"], ["≈ a city bus", "≈ gradski autobus"], ["≈ a tank", "≈ tenk"], ["≈ a blue whale", "≈ plavi kit"]] },
     { id: "records", icon: "trophy", m: "records", tiers: [1, 10, 25, 50], title: ["Record breaker", "Obarač rekorda"], desc: ["Personal records broken: {n}", "Oboreni lični rekordi: {n}"] },
-    { id: "bench", icon: "award", m: "bench", tiers: M => BENCH[M.sex] || BENCH.x, fmt: kgTxt, sexNote: true, title: ["Bench press", "Bench press"], desc: ["Best bench press: {n}", "Najbolji bench press: {n}"] },
-    { id: "benchBw", icon: "scale", m: "benchBw", tiers: M => BENCH_BW[M.sex] || BENCH_BW.x, fmt: ratioTxt, sexNote: true, needsBw: true, title: ["Bench vs bodyweight", "Bench naspram težine"], desc: ["Best bench ÷ your body weight: {n}", "Najbolji bench ÷ tvoja težina: {n}"] },
-    { id: "squat", icon: "weight", m: "squat", tiers: [60, 100, 140, 180], fmt: kgTxt, plates: true, title: ["Squat plate club", "Klub ploča: čučanj"], desc: ["Best squat: {n}", "Najbolji čučanj: {n}"] },
-    { id: "deadlift", icon: "weight", m: "deadlift", tiers: [60, 100, 140, 180, 220], fmt: kgTxt, plates: true, title: ["Deadlift plate club", "Klub ploča: mrtvo dizanje"], desc: ["Best deadlift: {n}", "Najbolje mrtvo dizanje: {n}"] },
+    { id: "bench", icon: "award", m: "bench", tiers: ladder("bench"), fmt: kgTxt, plates: true, sexNote: true, title: ["Bench press", "Bench press"], desc: ["Best bench press: {n}", "Najbolji bench press: {n}"] },
+    { id: "benchBw", icon: "scale", m: "benchBw", tiers: ladder("benchBw"), fmt: ratioTxt, sexNote: true, needsBw: true, title: ["Bench vs bodyweight", "Bench naspram težine"], desc: ["Best bench ÷ your body weight: {n}", "Najbolji bench ÷ tvoja težina: {n}"] },
+    { id: "squat", icon: "weight", m: "squat", tiers: ladder("squat"), fmt: kgTxt, plates: true, sexNote: true, title: ["Squat", "Čučanj"], desc: ["Best squat: {n}", "Najbolji čučanj: {n}"] },
+    { id: "deadlift", icon: "weight", m: "deadlift", tiers: ladder("deadlift"), fmt: kgTxt, plates: true, sexNote: true, title: ["Deadlift", "Mrtvo dizanje"], desc: ["Best deadlift: {n}", "Najbolje mrtvo dizanje: {n}"] },
+    { id: "ohp", icon: "arrow-bar-to-up", m: "ohp", tiers: ladder("ohp"), fmt: kgTxt, sexNote: true, title: ["Overhead press", "Potisak iznad glave"], desc: ["Best standing overhead press: {n}", "Najbolji potisak iznad glave iz stajanja: {n}"] },
+    { id: "pullups", icon: "chevrons-up", m: "pullups", tiers: ladder("pullups"), fmt: repsTxt, sexNote: true, title: ["Pull-ups", "Zgibovi"], desc: ["Most pull-ups in one set (no assistance): {n}", "Najviše zgibova u jednoj seriji (bez pomoći): {n}"] },
+    { id: "dips", icon: "chevrons-down", m: "dips", tiers: ladder("dips"), fmt: repsTxt, sexNote: true, title: ["Dips", "Propadanja"], desc: ["Most dips in one set: {n}", "Najviše propadanja u jednoj seriji: {n}"] },
+    { id: "farmer", icon: "walk", m: "farmer", tiers: ladder("farmer"), fmt: perHandTxt, sexNote: true, title: ["Farmer's walk", "Farmerski hod"], desc: ["Heaviest weight carried in one hand: {n}. Log the weight of one hand.", "Najveća težina u jednoj ruci: {n}. Upiši težinu jedne ruke."] },
     { id: "weekend", icon: "sun", m: "weekend", tiers: [1, 5, 10], title: ["Weekend warrior", "Vikend ratnik"], desc: ["Weeks with both Saturday and Sunday done: {n}", "Nedelje sa odrađenom i subotom i nedeljom: {n}"] },
     { id: "comeback", icon: "refresh", m: "comeback", tiers: [1], title: ["Comeback", "Povratak"], desc: ["Train again after 3+ weeks off", "Ponovo treniraj posle 3+ nedelje pauze"] },
     { id: "backup", icon: "device-floppy", m: "backup", tiers: [1], title: ["Safe keeper", "Čuvar podataka"], desc: ["Save a backup of your data", "Sačuvaj kopiju podataka"] }
@@ -1892,18 +1926,25 @@
     const byId = {}; program().forEach(s => { byId[s.id] = s; });
     const dowOf = sid => byId[sid] ? byId[sid].dow : 0;
     const recs = allSessionRecords().sort((a, b) => a.wk < b.wk ? -1 : a.wk > b.wk ? 1 : dowOf(a.sid) - dowOf(b.sid));
-    const doneBy = {}, bestW = {}, liftCache = {}, lift = { bench: 0, squat: 0, deadlift: 0 };
+    const doneBy = {}, bestW = {}, liftCache = {}, lift = {};
+    Object.keys(LIFTS).forEach(k => { lift[k] = 0; });
     let records = 0;
     recs.forEach(({ wk, sid, s }) => {
       if (!s) return;
       if (s.done) (doneBy[wk] = doneBy[wk] || new Set()).add(sid);
       new Set([...Object.keys(s.sets || {}), ...Object.keys(s.w || {})]).forEach(exId => {
-        const w = heaviest(filled(setsOf(s, exId)));
+        const st2 = filled(setsOf(s, exId));
+        if (!(exId in liftCache)) liftCache[exId] = liftOf(exId);
+        const l = liftCache[exId];
+        if (l && LIFTS[l].reps) { // bodyweight moves: best reps in one set
+          const r = Math.max(-Infinity, ...st2.map(x => num(x.r)).filter(v => v != null && v > 0));
+          if (isFinite(r)) lift[l] = Math.max(lift[l], r);
+        }
+        const w = heaviest(st2);
         if (!isFinite(w)) return;
         if (bestW[exId] != null && w > bestW[exId]) records++; // beat an earlier best
         bestW[exId] = Math.max(bestW[exId] || 0, w);
-        if (!(exId in liftCache)) liftCache[exId] = liftOf(exId);
-        const l = liftCache[exId]; if (l) lift[l] = Math.max(lift[l], w);
+        if (l && !LIFTS[l].reps) lift[l] = Math.max(lift[l], w);
       });
     });
     const active = [...new Set(recs.filter(r => hasActivity(r.s)).map(r => r.wk))].sort();
@@ -1920,7 +1961,7 @@
     const p = state.profile || {}, bw = num(p.bw);
     return {
       workouts: st.workouts, streak: st.best, perfect, sets: st.sets, volume: st.volume, records, weekend, comeback,
-      backup: state.lastBackup ? 1 : 0, bench: lift.bench, squat: lift.squat, deadlift: lift.deadlift,
+      backup: state.lastBackup ? 1 : 0, ...lift,
       benchBw: bw && lift.bench ? lift.bench / bw : 0, hasBw: !!bw, sex: p.sex || "x"
     };
   }
@@ -1967,8 +2008,10 @@
   function openAch(id) {
     const r = evalAch().find(x => x.a.id === id); if (!r) return;
     const L = LI(), el = $("achDetail"), noBw = r.a.needsBw && !r.M.hasBw;
+    const names = LIFT_NAMES[r.a.m];
     el.innerHTML = medalHtml(r, "big") + '<h2 id="achMTitle"></h2><p class="ad"></p>' +
-      (noBw || r.a.sexNote ? '<p class="note2"></p>' : "") + '<ul class="tiers"></ul>';
+      (noBw || r.a.sexNote ? '<p class="note2"></p>' : "") + '<ul class="tiers"></ul>' + (names ? '<p class="note names"></p>' : "");
+    if (names) el.querySelector(".names").textContent = t("countsAs", { n: Array.isArray(names) ? names[L] : names });
     el.querySelector("h2").textContent = r.title;
     el.querySelector(".ad").textContent = r.a.desc[L].replace("{n}", fmtA(r, r.v));
     if (noBw) el.querySelector(".note2").textContent = t("needBw");
@@ -1980,7 +2023,9 @@
       li.innerHTML = '<span class="dot"></span><span class="tn"><span class="tl"></span><small></small></span><span class="ts"></span>';
       li.querySelector(".dot").style.background = tierColor(r, i);
       li.querySelector(".tl").textContent = single ? r.title : tierName(r, i) + " · " + fmtA(r, th);
-      li.querySelector("small").textContent = r.a.labels ? r.a.labels[i][L] : r.a.plates ? plates(i + 1) : "";
+      // Plate label only when the weight is exactly bar (20) + 20 kg plates on each side.
+      const plateN = r.a.plates && th > 20 && (th - 20) % 40 === 0 ? (th - 20) / 40 : 0;
+      li.querySelector("small").textContent = r.a.labels ? r.a.labels[i][L] : plateN ? plates(plateN) : "";
       li.querySelector(".ts").textContent = got ? "✓" : single || noBw ? "🔒" : t("toGo", { v: fmtA(r, th - r.v) });
       ul.appendChild(li);
     });
@@ -2023,7 +2068,10 @@
     const list = evalAch();
     let changed = false;
     list.forEach(r => {
-      const k = seenKey(r), seen = state.achSeen[k] != null ? state.achSeen[k] : -1;
+      const k = seenKey(r);
+      // A badge this phone has never tracked (added in an app update): record it silently.
+      if (!(k in state.achSeen)) { state.achSeen[k] = r.level; changed = true; return; }
+      const seen = state.achSeen[k] != null ? state.achSeen[k] : -1;
       if (r.level <= seen) return;
       state.achSeen[k] = r.level; changed = true;
       const sub = r.tiers.length === 1 ? r.a.desc[LI()].replace("{n}", "") : tierName(r, r.level) + " · " + fmtA(r, r.tiers[r.level]);
