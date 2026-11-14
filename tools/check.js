@@ -209,8 +209,8 @@ S.setLangValue("en");
 
 // sounds: which kinds may play in which mode
 const SA = mod.sound.soundAllowed;
-eq("sound", ["pop", "done", "fanfare", "timer"].map(k => [SA(k, "off"), SA(k, "timer"), SA(k, "all")]),
-  [[false, false, true], [false, false, true], [false, false, true], [false, true, true]], "sound rules (off / timer / all)");
+eq("sound", ["tap", "pop", "done", "fanfare", "timer"].map(k => [SA(k, "off"), SA(k, "timer"), SA(k, "all")]),
+  [[false, false, true], [false, false, true], [false, false, true], [false, false, true], [false, true, true]], "sound rules (off / timer / all)");
 
 // exercise-name matching for the strength badges
 const names = {

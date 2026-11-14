@@ -518,15 +518,19 @@ test("help guide opened with '?' closes with Escape, the X-less backdrop, or 'Go
   app.click(app.$("helpBtn")); app.click(app.$("finish")); assert(!app.shown("welcome"), "'Got it' should close the guide");
 });
 
-test("sounds: 'Timer' (default) only beeps for the timer, 'All' plays every sound, 'Off' is silent", async () => {
+test("sounds: 'All' is the default and plays every sound, 'Timer' only beeps for the timer, 'Off' is silent", async () => {
   await boot({ storage: starterUser({ weeks: { [weekOf(-1)]: { upper2: { done: true, ex: {}, w: {}, sets: { bench: [{ w: "80", r: "5" }] } } } } }) });
   localStorage.removeItem("gymtracker.sound");
   const log = app.w.__gym.soundLog;
   const finishTimer = async () => { const b = app.q('#presets button[data-s="60"]'); b.dataset.s = "1"; app.click(b); await sleep(1400); b.dataset.s = "60"; };
-  // default = timer only
+  // default = all
+  app.click(app.$("progressBtn")); assert(log.includes("tap"), "default should be 'All' (button should tick)"); app.click(app.$("pClose"));
+  // timer only
+  app.click(app.$("profileBtn")); app.click(app.q('#prSound [data-v="timer"]')); app.click(app.$("prClose"));
+  log.length = 0;
   openCard("lowerA"); app.click(app.q('.session[data-sid="lowerA"] .ex input[type=checkbox]'));
   await finishTimer();
-  assertEq(log.slice(), ["timer"], "default mode should only beep for the timer");
+  assertEq(log.slice(), ["timer"], "'Timer' mode should only beep for the timer");
   // all
   app.click(app.$("profileBtn")); app.click(app.q('#prSound [data-v="all"]')); app.click(app.$("prClose"));
   assertEq(localStorage.getItem("gymtracker.sound"), "all", "setting not saved");
@@ -538,6 +542,13 @@ test("sounds: 'Timer' (default) only beeps for the timer, 'All' plays every soun
   assert(log.includes("pop"), "tick should pop: " + log.join(","));
   assert(log.includes("done"), "finished workout should chime: " + log.join(","));
   assert(log.includes("fanfare"), "record should play a fanfare: " + log.join(","));
+  // ordinary buttons tick; ticking an exercise pops WITHOUT an extra tick
+  app.click(app.$("celebrate")); app.key("Escape"); app.key("Escape"); await sleep(60);
+  log.length = 0; app.click(app.$("progressBtn")); assertEq(log.slice(), ["tap"], "a button should tick");
+  app.click(app.$("pClose")); await sleep(60);
+  log.length = 0; openCard("upper1"); await sleep(60); log.length = 0;
+  app.click(app.q('.session[data-sid="upper1"] .ex input[type=checkbox]')); assertEq(log.slice(), ["pop"], "ticking should only pop");
+  await sleep(60); log.length = 0; app.click(app.q('.session[data-sid="upper1"] .ex input[type=checkbox]')); assertEq(log.slice(), ["tap"], "un-ticking should tap");
   // off
   app.click(app.$("celebrate")); app.key("Escape"); app.key("Escape"); app.key("Escape");
   app.click(app.$("profileBtn")); app.click(app.q('#prSound [data-v="off"]')); app.click(app.$("prClose"));

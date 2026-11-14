@@ -1,6 +1,6 @@
 // Sounds, made in code with the Web Audio API (no sound files, nothing to license, works offline).
 // playSound(kind) plays one of SOUNDS if the user's Sounds setting allows it:
-//   "off" = never · "timer" = only the rest-timer beeps (default) · "all" = every sound.
+//   "off" = never · "timer" = only the rest-timer beeps · "all" = every sound (default).
 // Browsers only allow audio after a tap, so the audio engine is unlocked on the first tap (init()).
 // Tune a sound by changing its notes below: [frequency Hz, start s, length s, waveform, volume 0..1].
 
@@ -8,6 +8,8 @@ const SETTING_KEY = "gymtracker.sound";
 const MODES = ["off", "timer", "all"];
 
 export const SOUNDS = { // exported so tools can render previews
+  // tiny quiet "tick" for ordinary buttons (only in "All" mode), like a phone keyboard click
+  tap: [[1500, 0, 0.035, "sine", 0.09, 1100]],
   // soft "pop" when ticking an exercise: quick falling sine
   pop: [[880, 0, 0.07, "sine", 0.22, 520]],
   // two-note chime when a workout is done
@@ -21,7 +23,7 @@ export const SOUNDS = { // exported so tools can render previews
 export function getSoundMode() {
   let m = null;
   try { m = localStorage.getItem(SETTING_KEY); } catch (e) {}
-  return MODES.includes(m) ? m : "timer";
+  return MODES.includes(m) ? m : "all";
 }
 export function setSoundMode(m) {
   if (!MODES.includes(m)) return;
@@ -69,8 +71,25 @@ export function playSound(kind, force) {
   } catch (e) { return false; }
 }
 
-// Runs once at startup (called from main.js): unlock audio on the first tap anywhere.
+// Which taps get the "tap" tick. Buttons whose action already has its own sound are left out, so you
+// never hear two sounds at once: ticking an exercise (pop), the Sounds setting (plays a preview).
+const TAPPABLE = "button, summary, .s-head, [role='button']";
+const OWN_SOUND = "#prSound button";
+let lastTap = 0;
+
+// Runs once at startup (called from main.js): unlock audio on the first tap anywhere, tap ticks.
 export function init() {
   const unlock = () => { if (unlockAudio() && ctx.state === "running") document.removeEventListener("pointerdown", unlock); };
   document.addEventListener("pointerdown", unlock);
+  document.addEventListener("click", e => {
+    const el = e.target.closest && e.target.closest(TAPPABLE);
+    if (!el || el.matches(OWN_SOUND) || el.disabled || e.target.closest(".daycheck")) return; // day box: chime / un-tick tap
+    const now = Date.now(); if (now - lastTap < 40) return; // no machine-gun clicks
+    lastTap = now;
+    playSound("tap");
+  }, true);
+  // un-ticking an exercise or a workout: a tap (ticking plays the pop / chime instead)
+  document.addEventListener("change", e => {
+    if (e.target.type === "checkbox" && !e.target.checked && e.target.closest(".session")) playSound("tap");
+  }, true);
 }
