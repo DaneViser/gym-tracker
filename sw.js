@@ -13,10 +13,10 @@ const CACHE = "gym-tracker-v2";
 const SHELL = [
   "./", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "css/tokens.css", "css/base.css", "css/sheets.css", "css/week.css", "css/workouts.css", "css/progress.css",
-  "css/clock.css", "css/achievements.css", "css/profile.css", "css/notices.css", "css/timer.css", "css/calendar.css", "css/nutrition.css", "css/library.css", "css/responsive.css",
+  "css/clock.css", "css/achievements.css", "css/profile.css", "css/notices.css", "css/timer.css", "css/calendar.css", "css/nutrition.css", "css/library.css", "css/weight.css", "css/responsive.css",
   "js/version.js", "js/dom.js", "js/icons.js", "js/i18n.js", "js/starter.js", "js/state.js", "js/dates.js", "js/data.js", "js/render.js",
   "js/timer.js", "js/progress.js", "js/welcome.js", "js/profile.js", "js/controls.js", "js/achievements.js",
-  "js/clock.js", "js/offline.js", "js/sound.js", "js/calendar.js", "js/nutrition.js", "js/programs.js", "js/library.js", "js/main.js"
+  "js/clock.js", "js/offline.js", "js/sound.js", "js/calendar.js", "js/nutrition.js", "js/programs.js", "js/library.js", "js/weight.js", "js/main.js"
 ];
 const INDEX = new URL("./", self.registration.scope).href;
 const INDEX_PATH = new URL(INDEX).pathname;

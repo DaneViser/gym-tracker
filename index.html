@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" href="css/nutrition.css">
 <link rel="stylesheet" href="css/library.css">
+<link rel="stylesheet" href="css/weight.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -189,9 +190,19 @@
 <div class="modal" id="nutri" role="dialog" aria-modal="true" aria-labelledby="nTitle">
   <div class="sheet tall">
     <div class="p-top">
-      <h2 id="nTitle"><i data-icon="tools-kitchen-2"></i> <span data-i18n="nutriTitle"></span></h2>
+      <h2 id="nTitle"><span data-i18n="nutriTitle"></span></h2>
       <button class="p-close" id="nClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button>
     </div>
+    <section class="bw">
+      <h3 class="n-h"><i data-icon="scale"></i> <span data-i18n="bwTitle"></span></h3>
+      <div class="bw-row">
+        <input class="txt" id="bwIn" type="text" inputmode="decimal" maxlength="6" data-i18n-aria="bwTitle">
+        <button class="pill primary" id="bwSave" type="button" data-i18n="save"></button>
+      </div>
+      <div class="err" id="bwErr" aria-live="polite"></div>
+      <div id="bwOut"></div>
+    </section>
+    <h3 class="n-h"><i data-icon="tools-kitchen-2"></i> <span data-i18n="nCalcH"></span></h3>
     <p class="lead" data-i18n="nutriLead"></p>
     <div class="n-form">
       <div class="row3">

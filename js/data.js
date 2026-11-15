@@ -41,6 +41,27 @@ export function setText(x) {
   return r + " " + t("reps");
 }
 export const setsText = st => filled(st).map(setText).join(", ");
+// Rep range from a sets text: "3–4 × 6–10" → {lo: 6, hi: 10}, "5 × 5" → {lo: 5, hi: 5}.
+// null for anything that isn't reps: "3 × 30–45 s", "4 × 30 m", "2 × max reps", "lots of sets".
+export function repRange(text) {
+  const m = /[×xX]\s*(\d+)(?:\s*[–-]\s*(\d+))?\s*(s|sec|sek|m|min|km)?\b/.exec(String(text || ""));
+  if (!m || m[3]) return null;
+  const lo = +m[1], hi = m[2] ? +m[2] : lo;
+  return lo >= 1 && hi >= lo && hi <= 50 ? { lo, hi } : null;
+}
+// Smallest sensible weight jump: light dumbbells go up less, big leg lifts more.
+export const weightStep = (w, bigLegs) => w <= 10 ? 1 : w < 20 ? 2 : bigLegs ? 5 : 2.5;
+// "Next time" (double progression): if every set at the top weight last time reached the top of the
+// rep range, go up one step; otherwise stay and aim for the top of the range. null = no advice.
+export function nextTarget(last, setsTextStr, bigLegs) {
+  const range = repRange(setsTextStr); if (!range) return null;
+  const ws = filled(last).filter(x => num(x.w) != null && num(x.w) > 0 && num(x.r) != null);
+  if (!ws.length) return null;
+  const top = Math.max(...ws.map(x => num(x.w)));
+  const atTop = ws.filter(x => num(x.w) === top);
+  if (atTop.every(x => num(x.r) >= range.hi)) return { up: true, w: top + weightStep(top, bigLegs), from: top, reps: range.lo, hi: range.hi };
+  return { up: false, w: top, from: top, reps: range.hi, hi: range.hi };
+}
 export function plannedCount(ex) { const m = String(ex.sets || "").match(/^\s*(\d+)/); const n = m ? +m[1] : 3; return Math.min(Math.max(n, 1), 8); }
 export function lastSets(sid, exId, beforeKey) {
   const keys = Object.keys(state.weeks).filter(k => k < beforeKey).sort().reverse();

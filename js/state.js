@@ -94,6 +94,11 @@ export function normalizeState(raw) {
   if (s.achSeen != null && !isObj(s.achSeen)) delete s.achSeen;
   if (isObj(s.nutrition)) { const n = s.nutrition; s.nutrition = { cm: str(n.cm, 6), age: str(n.age, 3), job: str(n.job, 12), sessions: str(n.sessions, 2), minutes: str(n.minutes, 3), goal: str(n.goal, 12) }; }
   else delete s.nutrition;
+  if (Array.isArray(s.bwLog)) { // body weight log: valid days only, one entry per day, sorted
+    const byDay = {};
+    s.bwLog.filter(e => isObj(e) && /^\d{4}-\d{2}-\d{2}$/.test(e.d) && Number.isFinite(parseFloat(String(e.kg).replace(",", ".")))).forEach(e => { byDay[e.d] = str(e.kg, 6); });
+    s.bwLog = Object.keys(byDay).sort().slice(-3000).map(d => ({ d, kg: byDay[d] }));
+  } else delete s.bwLog;
   return s;
 }
 

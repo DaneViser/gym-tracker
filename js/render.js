@@ -5,8 +5,8 @@ import { $ } from "./dom.js";
 import { setsWord } from "./i18n.js";
 import { tr } from "./starter.js";
 import { esc, lang, program, save, sorted, state, t, uid } from "./state.js";
-import { addDays, fmtShort, isoWeek, sameDay, setViewMonday, thisMonday, today, viewMonday, weekKey } from "./dates.js";
-import { bestSet, doneCount, filled, lastSets, plannedCount, sessionData, setsOf, setsText, weekData } from "./data.js";
+import { addDays, fmtNum, fmtShort, isoWeek, sameDay, setViewMonday, thisMonday, today, viewMonday, weekKey } from "./dates.js";
+import { bestSet, doneCount, filled, lastSets, nextTarget, num, plannedCount, sessionData, setsOf, setsText, weekData } from "./data.js";
 import { timerBusy } from "./timer.js";
 import { openProgress } from "./progress.js";
 import { renderNag } from "./controls.js";
@@ -132,6 +132,9 @@ export function renderTrackBody(body, sess, key, sd) {
 
     const btn = wrap.querySelector(".setbtn");
     const last = lastSets(sess.id, ex.id, key);
+    // "Next time" suggestion from last time's sets and this exercise's rep range (double progression).
+    const bigLegs = ["squat", "deadlift", "hipthrust"].includes(liftOf(ex.id)) || /leg ?press|potisak nogama/i.test(ex.id + " " + ex.name);
+    const hint = nextTarget(last, tr("e", ex.id, "sets", ex.sets), bigLegs);
     function updateBtn() {
       const st = filled(setsOf(sessionData(key, sess.id, false), ex.id));
       const b = bestSet(st);
@@ -143,7 +146,7 @@ export function renderTrackBody(body, sess, key, sd) {
       } else {
         btn.querySelector("b").textContent = "+";
         const lb = bestSet(last);
-        btn.querySelector("small").textContent = lb && String(lb.w || "").trim() ? t("last", { v: String(lb.w).trim() }) : t("log");
+        btn.querySelector("small").textContent = hint ? t("tryW", { v: fmtNum(hint.w) }) : lb && String(lb.w || "").trim() ? t("last", { v: String(lb.w).trim() }) : t("log");
       }
       btn.setAttribute("aria-expanded", !!openSets[setsKey]);
     }
@@ -158,7 +161,7 @@ export function renderTrackBody(body, sess, key, sd) {
       save(); render();
     });
 
-    if (openSets[setsKey]) wrap.appendChild(renderSetsPanel(sess, ex, key, last, updateBtn, wrap));
+    if (openSets[setsKey]) wrap.appendChild(renderSetsPanel(sess, ex, key, last, updateBtn, wrap, hint));
     body.appendChild(wrap);
   });
 
@@ -179,7 +182,7 @@ export function renderTrackBody(body, sess, key, sd) {
   body.appendChild(foot);
 }
 
-export function renderSetsPanel(sess, ex, key, last, updateBtn, wrap) {
+export function renderSetsPanel(sess, ex, key, last, updateBtn, wrap, hint = null) {
   const panel = document.createElement("div");
   panel.className = "sets-panel";
   const sd = sessionData(key, sess.id, false);
@@ -206,10 +209,19 @@ export function renderSetsPanel(sess, ex, key, last, updateBtn, wrap) {
     });
     panel.appendChild(lr);
   }
+  if (hint) {
+    const nx = document.createElement("div"); nx.className = "next";
+    nx.innerHTML = icon(hint.up ? "arrow-up" : "chevrons-up", "i") + "<span></span>";
+    nx.querySelector("span").textContent = t(hint.up ? "nextUp" : "nextSame", { w: fmtNum(hint.w), u: t("kg"), r: hint.hi });
+    panel.appendChild(nx);
+  }
 
   const rowsEl = document.createElement("div");
   panel.appendChild(rowsEl);
-  function phW(i) { return (last[i] && String(last[i].w || "").trim()) || (i > 0 && String(cur[i - 1].w || "").trim()) || t("kg"); }
+  function phW(i) {
+    if (hint && (!last[i] || num(last[i].w) === hint.from)) return fmtNum(hint.w); // suggested weight for the working sets
+    return (last[i] && String(last[i].w || "").trim()) || (i > 0 && String(cur[i - 1].w || "").trim()) || t("kg");
+  }
   const timed = liftOf(ex.id) === "plank"; // plank: second box is seconds, not reps
   const rUnit = timed ? "s" : t("reps");
   function phR(i) { return (last[i] && String(last[i].r || "").trim()) || (i > 0 && String(cur[i - 1].r || "").trim()) || rUnit; }

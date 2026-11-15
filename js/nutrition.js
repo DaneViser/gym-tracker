@@ -1,4 +1,4 @@
-// Calorie calculator (header button with the fork & knife). calcNutrition() is pure maths (unit-tested);
+// Calorie calculator (header button with the fork & knife; the body weight log above it is weight.js). calcNutrition() is pure maths (unit-tested);
 // the rest is the sheet. Inputs are saved in state.nutrition; body weight is shared with the profile (state.profile.bw).
 //
 // How the estimate is made (standard, widely used formulas — an estimate, not medical advice):
@@ -17,6 +17,7 @@ import { $ } from "./dom.js";
 import { state, save, t, esc, program } from "./state.js";
 import { locale } from "./dates.js";
 import { markSeenSilently } from "./achievements.js";
+import { renderWeight } from "./weight.js";
 
 export const JOBS = { desk: 1.2, feet: 1.375, physical: 1.55 };
 export const GOALS = { lose05: -0.5, lose025: -0.25, keep: 0, gain025: 0.25, gain05: 0.5 };
@@ -104,7 +105,7 @@ function renderResult() {
 }
 
 export function openNutrition() {
-  fillForm(); renderResult();
+  fillForm(); renderResult(); renderWeight();
   $("nutri").classList.add("show"); document.body.classList.add("modal-open");
 }
 function closeNutrition() {

@@ -62,6 +62,9 @@
 .sets-panel { padding: 2px 14px 14px 54px; }
 .sets-panel .last { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 8px; flex-wrap: wrap; }
 .sets-panel .last span { overflow-wrap: anywhere; }
+.sets-panel .next { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); background: var(--accent-soft); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+.sets-panel .next svg { flex: none; width: 16px; height: 16px; margin-top: 1px; color: var(--accent); }
+.sets-panel .next span { overflow-wrap: anywhere; }
 .setrow { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .setrow .sn { width: 54px; flex: none; font-size: 12.5px; font-weight: 700; color: var(--muted); }
 .setrow .x { color: var(--muted); font-weight: 700; }

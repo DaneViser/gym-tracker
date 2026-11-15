@@ -310,6 +310,43 @@ const oldNew = S.normalizeState({ weeks: {}, program: [{ id: "w", dow: 1, ex: [{
 check("repair", !("isNew" in oldNew) && oldNew.optional === true, "old 'new' tag removed from saved programs, other flags kept");
 check("repair", JSON.stringify(mod.starter.starterProgram()).indexOf("isNew") < 0, "starter program has no 'new' tags");
 
+// "next time" suggestion (double progression)
+eq("next", DA.repRange("3–4 × 6–10"), { lo: 6, hi: 10 }, "range from '3–4 × 6–10'");
+eq("next", DA.repRange("5 × 5"), { lo: 5, hi: 5 }, "single rep count");
+eq("next", DA.repRange("3 × 8–12 / strana"), { lo: 8, hi: 12 }, "Serbian per-side text");
+eq("next", DA.repRange("3x10"), { lo: 10, hi: 10 }, "typed with an x");
+for (const s of ["3 × 30–45 s", "4 × 30–40 m", "2 × max reps", "lots of sets", "1–2 exercises", "40–60 min", ""]) eq("next", DA.repRange(s), null, "no rep range in '" + s + "'");
+eq("next", DA.nextTarget([{ w: "80", r: "10" }, { w: "80", r: "10" }, { w: "80", r: "11" }], "3 × 8–10", false).w, 82.5, "all sets at top of range → +2.5 kg");
+eq("next", DA.nextTarget([{ w: "100", r: "5" }, { w: "100", r: "5" }], "5 × 5", true).w, 105, "big leg lift → +5 kg");
+eq("next", DA.nextTarget([{ w: "8", r: "15" }], "3 × 12–15", false).w, 9, "light dumbbell → +1 kg");
+const stay = DA.nextTarget([{ w: "60", r: "10" }, { w: "80", r: "10" }, { w: "80", r: "8" }], "3 × 8–10", false);
+check("next", stay && !stay.up && stay.w === 80 && stay.reps === 10, "a set below the top → stay at 80 kg, aim for 10");
+check("next", DA.nextTarget([{ w: "60", r: "12" }, { w: "80", r: "10" }], "3 × 8–10", false).up, "lighter warm-up sets don't block the step up");
+eq("next", DA.nextTarget([{ w: "", r: "12" }], "3 × 8–12", false), null, "no weight logged (bodyweight) → no suggestion");
+eq("next", DA.nextTarget([], "3 × 8–12", false), null, "never logged → no suggestion");
+eq("next", DA.nextTarget([{ w: "80", r: "10" }], "3 × 30 s", false), null, "timed exercise → no suggestion");
+eq("next", DA.nextTarget([{ w: "82,5", r: "10" }], "3 × 8–10", false).w, 85, "comma decimals work");
+
+// body weight trend + advice
+const WG = mod.weight, dk = n => WG.dayKey(new Date(2026, 10, 1 + n));
+const now = new Date(2026, 10, 29);
+eq("weight", WG.bwTrend([{ d: dk(0), kg: "80" }, { d: dk(3), kg: "80" }], now), null, "too few weigh-ins → no trend");
+const losing = [0, 7, 14, 21, 28].map((n, i) => ({ d: dk(n), kg: String(80 - i * 0.5) }));
+check("weight", Math.abs(WG.bwTrend(losing, now).perWeek + 0.5) < 0.01, "steady −0.5 kg a week is measured as −0.5");
+eq("weight", WG.bwAdvice(WG.bwTrend(losing, now), "lose05"), { kind: "ok" }, "on track for −0.5 kg a week");
+eq("weight", WG.bwAdvice(WG.bwTrend(losing, now), "keep"), { kind: "more", kcal: 300 }, "losing while trying to keep → eat more (capped at 300)");
+const flat = [0, 7, 14, 21, 28].map(n => ({ d: dk(n), kg: "80" }));
+eq("weight", WG.bwAdvice(WG.bwTrend(flat, now), "lose025"), { kind: "less", kcal: 300 }, "not losing on a −0.25 goal → eat less");
+eq("weight", WG.bwAdvice(WG.bwTrend(flat, now), "keep"), { kind: "ok" }, "flat while keeping → on track");
+eq("weight", WG.bwAdvice({ perWeek: 0, days: 11, n: 3 }, "lose05"), null, "under 2 weeks of data → no advice yet");
+S.replaceState({ weeks: {}, bwLog: [{ d: dk(0), kg: "80" }] });
+check("weight", WG.addWeighIn("81,4", new Date(2026, 10, 2)) && S.state.profile.bw === "81.4", "weigh-in saved and copied to the profile");
+check("weight", !WG.addWeighIn("8", new Date()) && !WG.addWeighIn("abc", new Date()), "impossible weights refused");
+WG.addWeighIn("81", new Date(2026, 10, 2));
+eq("weight", S.state.bwLog.length, 2, "second weigh-in on the same day replaces the first");
+const bwFixed = S.normalizeState({ weeks: {}, bwLog: [{ d: "2026-11-02", kg: "80" }, { d: "bad", kg: "1" }, null, { d: "2026-11-01", kg: 79 }, { d: "2026-11-02", kg: "81" }, { d: "2026-11-03", kg: "x" }] }).bwLog;
+eq("weight", bwFixed, [{ d: "2026-11-01", kg: "79" }, { d: "2026-11-02", kg: "81" }], "repair: bad entries dropped, one per day, sorted");
+
 // achievement metrics on a known history
 S.replaceState({
   name: "T", onboarded: true, profile: { sex: "m", bw: "80" },

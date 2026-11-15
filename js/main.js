@@ -14,11 +14,12 @@ import { protectStorage, init as initOffline } from "./offline.js";
 import { soundLog, init as initSound } from "./sound.js";
 import { init as initNutrition } from "./nutrition.js";
 import { init as initLibrary } from "./library.js";
+import { init as initWeight } from "./weight.js";
 
 loadState();
 
 // The same order the screens were wired up in before (matters for the Escape key handlers).
-initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initControls(); initAchievements(); initClock(); initOffline(); initSound(); initNutrition(); initLibrary();
+initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initControls(); initAchievements(); initClock(); initOffline(); initSound(); initNutrition(); initLibrary(); initWeight();
 
 onSaved(scheduleAchCheck); // every saved change may unlock an achievement
 let warnedSave = false;     // tell the user (once) if the phone refuses to save

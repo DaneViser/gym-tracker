@@ -49,6 +49,7 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `calendar.css` | Training calendar. |
 | `nutrition.css` | Calorie calculator sheet. |
 | `library.css` | Program library sheet (goal chips, program cards, program detail). |
+| `weight.css` | Body weight log + section headings in the calorie sheet. |
 | `responsive.css` | Phone overrides (`max-width: 420px`). **Must stay the last stylesheet.** |
 
 Modern CSS nesting and variables work in all current browsers, so use them freely in new CSS (no SCSS / build needed).
@@ -77,7 +78,7 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `library.js` | Program library sheet: list + goal filter, detail, `openPrograms()`, `useProgram(id)`. Opened from Profile → Programs, the empty week and the first visit. |
 | `state.js` | `state`, `loadState()`, `save()`, `replaceState()`, **`normalizeState()` (repairs old/broken data)**, `t()`, `esc()`, `uid()`, `lang`, `program()`, `onSaved()`/`onSaveFailed()` hooks. |
 | `dates.js` | Week maths (Monday-based ISO weeks), date/number formatting, `viewMonday` + `setViewMonday()`. |
-| `data.js` | `sessionData`, `setsOf`, `bestSet`, `lastSets`, `setText`, `num`, `plannedCount`. |
+| `data.js` | `sessionData`, `setsOf`, `bestSet`, `lastSets`, `setText`, `num`, `plannedCount`, `repRange()` + `nextTarget()` (the "try 82.5" next-time suggestion: double progression). |
 | `render.js` | `render()` → `renderSession()` → `renderTrackBody()` / `renderEditBody()` / `renderSetsPanel()`, `applyStatic()`, history squares, "+ Add workout", `toast()`, `buzz()`, swipe between weeks. |
 | `timer.js` | Rest timer. |
 | `progress.js` | `entriesFor()`, `openProgress()`, `renderProgress()` (hand-made SVG chart, no library). |
@@ -87,6 +88,7 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `achievements.js` | `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
 | `clock.js` | Header clock. |
 | `calendar.js` | Training calendar in the profile (GitHub-style day grid), `sessionDay()` (real day via `doneAt`), `calendarDays()`. |
+| `weight.js` | Body weight log at the top of the calorie sheet: `addWeighIn()`, chart, `bwTrend()` (4-week slope), `bwAdvice()` (kcal change vs. the calculator goal). Newest weigh-in is copied to `profile.bw`. |
 | `nutrition.js` | Calorie calculator sheet; `calcNutrition()` = pure maths (Mifflin-St Jeor, job factor, workouts as MET, goal), sources in the file header. |
 | `sound.js` | `SOUNDS` (made in code with Web Audio — no files), `playSound(kind)`, Sounds setting (off / timer / all, default all). Tune a sound by editing its notes. |
 | `offline.js` | Service worker registration, `navigator.storage.persist()`, new-version check. |
@@ -131,7 +133,8 @@ state = {
 Also on `state`: `lastBackup` (ms timestamp), `backupCount`, `backupSnooze` (ms; reminder hidden until then),
 `profile: { sex: "m" | "f" | "x", bw: "80" }` (optional, for strength badges), `achSeen: { badgeId: tierIndex }`
 (highest tier already celebrated; strength badges use `"bench:m"` etc.), `achVersion`, and
-`nutrition: { cm, age, job, sessions, minutes, goal }` (calorie calculator inputs; body weight lives in `profile.bw`). Achievements themselves
+`nutrition: { cm, age, job, sessions, minutes, goal }` (calorie calculator inputs; body weight lives in `profile.bw`), and
+`bwLog: [{ d: "2026-11-15", kg: "80.4" }]` (body weight log, local dates, one per day, sorted). Achievements themselves
 are never stored: they are recalculated from `weeks` + `program`.
 
 Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto), `gymtracker.sound` (`off`/`timer`/`all`, missing = all).
@@ -208,7 +211,7 @@ node tools/e2e.js
   `t("key")` / `data-i18n` / `$("id")` exists, badges have 6 rising tiers, files are linked and in `SHELL`,
   `APP_VERSION` bumped, plus unit tests (week maths incl. week 53, number parsing, best set, exercise-name
   matching, Serbian plurals, data repair, badge metrics).
-- `e2e.js` (~1 min, needs Chrome/Edge): ~43 scenarios in a 375×812 frame — first visit, logging weird inputs,
+- `e2e.js` (~1 min, needs Chrome/Edge): ~45 scenarios in a 375×812 frame — first visit, logging weird inputs,
   editing, deleting, corrupted / malformed / very old saved data, storage full, backup round-trip and bad
   restore files, HTML injection in names, Serbian on every screen, long names, swipe, timer, 3 years of data
   (speed). Every scenario also fails on any JavaScript error or sideways scrolling.

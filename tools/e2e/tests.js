@@ -701,6 +701,54 @@ test("program library: empty week button, first visit picker can be closed, prog
   assert(/Celo telo A/.test(app.text(app.$("sessions"))) && /Čučanj/.test(app.text(app.$("sessions"))), "workouts not in Serbian");
 });
 
+test("next-time hint: step up after hitting the top of the range, otherwise stay; placeholders follow", async () => {
+  const sets = (w, reps) => reps.map(r => ({ w, r: String(r) }));
+  await boot({ storage: starterUser({ weeks: { [weekOf(-1)]: { upper1: { done: true, ex: {}, w: {}, sets: { bench: sets("80", [10, 10, 10]), row: sets("50", [12, 11, 10]) } } } } }) });
+  openCard("upper1");
+  assertEq(app.text(exRow("upper1", 0).querySelector(".setbtn small")), "try 82.5", "bench button suggests the next weight");
+  app.click(exRow("upper1", 0).querySelector(".setbtn"));
+  assert(/82.5 kg/.test(app.text(exRow("upper1", 0).querySelector(".next"))), "panel explains the step up");
+  assertEq(exRow("upper1", 0).querySelector(".setrow input").placeholder, "82.5", "weight box suggests 82.5");
+  const rowEx = app.qa('.session[data-sid="upper1"] .exw').find(r => /Row/.test(app.text(r.querySelector(".name"))));
+  assertEq(app.text(rowEx.querySelector(".setbtn small")), "try 50", "row: not all sets at 12 → stay at 50");
+  app.click(rowEx.querySelector(".setbtn"));
+  assert(/50 kg × 12/.test(app.text(app.qa('.session[data-sid="upper1"] .exw').find(r => /Row/.test(app.text(r.querySelector(".name")))).querySelector(".next"))), "panel shows the rep goal");
+  const pull = app.qa('.session[data-sid="upper1"] .exw').find(r => /Pull-ups/.test(app.text(r.querySelector(".name"))));
+  assertEq(app.text(pull.querySelector(".setbtn small")), "Log", "no suggestion without history / rep range");
+});
+
+test("body weight log: save, bad input, same-day replace, trend advice, delete, Serbian", async () => {
+  await boot({ storage: starterUser({ profile: { sex: "m", bw: "" } }) });
+  app.click(app.$("nutriBtn"));
+  assert(/2–3 times a week/.test(app.text(app.$("bwOut"))), "tip shown before the first weigh-in");
+  app.type(app.$("bwIn"), "5"); app.click(app.$("bwSave"));
+  assert(app.text(app.$("bwErr")).length > 0, "impossible weight accepted");
+  app.type(app.$("bwIn"), "80,4"); app.click(app.$("bwSave"));
+  assertEq(app.stored().bwLog.length, 1, "weigh-in saved");
+  assertEq(app.stored().profile.bw, "80.4", "copied to the profile (strength badges)");
+  assertEq(app.$("nKg").value, "80.4", "calculator weight follows");
+  assertEq(app.text(app.$("bwErr")), "", "error cleared");
+  app.type(app.$("bwIn"), "80.9"); app.key("Enter", app.$("bwIn"));
+  assertEq(app.stored().bwLog.length, 1, "same day replaces");
+  assertEq(app.stored().bwLog[0].kg, "80.9", "newest value kept");
+  app.click(app.q(".bw-del"));
+  assertEq(app.stored().bwLog.length, 0, "deleted");
+  const day = n => { const d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const bwLog = [27, 20, 13, 6, 0].map(n => ({ d: day(n), kg: "80" }));
+  await boot({ storage: starterUser({ bwLog, profile: { sex: "m", bw: "80" }, nutrition: { cm: "180", age: "30", job: "desk", sessions: "4", minutes: "60", goal: "lose05" } }) });
+  app.click(app.$("nutriBtn"));
+  assert(app.q(".bw-chart"), "chart drawn");
+  assert(/Trend: 0 kg a week/.test(app.text(app.$("bwOut"))), "flat trend shown: " + app.text(app.q(".bw-trend")));
+  assert(/kcal less/.test(app.text(app.q(".bw-adv"))), "advice to eat less when not losing");
+  app.$("nGoal").value = "keep"; app.$("nGoal").dispatchEvent(new app.w.Event("change", { bubbles: true }));
+  assert(/on track/.test(app.text(app.q(".bw-adv"))), "advice follows the goal");
+  assertEq(app.qa(".bw-list li").length, 5, "last 5 weigh-ins listed");
+  noSideScroll("(weight log)");
+  await boot({ storage: starterUser({ bwLog }), lang: "sr" });
+  app.click(app.$("nutriBtn"));
+  assert(/Telesna težina/.test(app.text(app.$("nutri"))) && /nedeljno/.test(app.text(app.q(".bw-trend"))), "weight log in Serbian");
+});
+
 // =====================================================================================
 // run
 // =====================================================================================
