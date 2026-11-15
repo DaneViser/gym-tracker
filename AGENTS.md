@@ -111,7 +111,7 @@ state = {
   program: [                    // the user's workouts (editable)
     { id: "upper1", dow: 1, altDow: null,   // dow: 0=Mon … 6=Sun; altDow = optional backup day
       title: "Upper 1", sub: "…",
-      ex: [ { id: "bench", name: "…", sets: "3–4 × 6–10", optional?: true, isNew?: true } ] }
+      ex: [ { id: "bench", name: "…", sets: "3–4 × 6–10", optional?: true } ] }
   ],
   weeks: {
     "2026-W46": {               // ISO week key from weekKey()

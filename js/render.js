@@ -126,7 +126,6 @@ export function renderTrackBody(body, sess, key, sd) {
       '</label><button class="setbtn" type="button"><b></b><small></small></button></div>';
     const nm = wrap.querySelector(".name");
     nm.textContent = tr("e", ex.id, "name", ex.name) || t("unnamedEx");
-    if (ex.isNew) nm.dataset.new = t("newTag");
     const meta = wrap.querySelector(".meta");
     meta.textContent = [tr("e", ex.id, "sets", ex.sets), ex.optional ? t("optional") : ""].filter(Boolean).join(" · ");
     if (ex.optional) meta.classList.add("opt");

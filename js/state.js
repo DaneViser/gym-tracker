@@ -61,7 +61,7 @@ export function normalizeState(raw) {
     weeks[wk] = out;
   }
   s.weeks = weeks;
-  // program: [{ id, dow, altDow, title, sub, ex:[{ id, name, sets, optional?, isNew? }] }]
+  // program: [{ id, dow, altDow, title, sub, ex:[{ id, name, sets, optional? }] }]
   if (Array.isArray(s.program)) {
     const seen = new Set();
     s.program = s.program.filter(isObj).map(p => {
@@ -75,7 +75,7 @@ export function normalizeState(raw) {
         if (exSeen.has(eid)) eid = uid("ex"); exSeen.add(eid);
         const o = Object.assign({}, e, { id: eid, name: str(e.name, 60), sets: str(e.sets, 30) });
         if (e.optional) o.optional = true; else delete o.optional;
-        if (e.isNew) o.isNew = true; else delete o.isNew;
+        delete o.isNew; // old "new" tag from the starter program, no longer shown
         return o;
       });
       return Object.assign({}, p, { id, dow, altDow, title: str(p.title, 40), sub: str(p.sub, 60), ex });

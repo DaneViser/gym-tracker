@@ -273,6 +273,9 @@ eq("repair", fixed2.program[0].ex.length, 2, "null exercise dropped");
 check("repair", fixed2.program[0].ex[0].id !== fixed2.program[0].ex[1].id, "duplicate exercise ids made unique");
 eq("repair", fixed2.futureField, { keep: true }, "unknown fields kept (forward compatible)");
 eq("repair", S.normalizeState({ weeks: { "2026-W01": { u: { done: true } } } }).program.length, 4, "history without a program gets the starter program");
+const oldNew = S.normalizeState({ weeks: {}, program: [{ id: "w", dow: 1, ex: [{ id: "e", name: "Squat", sets: "3 × 5", isNew: true, optional: true }] }] }).program[0].ex[0];
+check("repair", !("isNew" in oldNew) && oldNew.optional === true, "old 'new' tag removed from saved programs, other flags kept");
+check("repair", JSON.stringify(mod.starter.starterProgram()).indexOf("isNew") < 0, "starter program has no 'new' tags");
 
 // achievement metrics on a known history
 S.replaceState({
