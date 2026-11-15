@@ -48,6 +48,7 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `timer.css` | Rest timer bar. |
 | `calendar.css` | Training calendar. |
 | `nutrition.css` | Calorie calculator sheet. |
+| `library.css` | Program library sheet (goal chips, program cards, program detail). |
 | `responsive.css` | Phone overrides (`max-width: 420px`). **Must stay the last stylesheet.** |
 
 Modern CSS nesting and variables work in all current browsers, so use them freely in new CSS (no SCSS / build needed).
@@ -71,7 +72,9 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `dom.js` | `$()` = `document.getElementById`. |
 | `icons.js` | `ICONS` (all Tabler icons, MIT), `icon(name, cls)` → `<svg>`, `applyIcons()` fills `<i data-icon="name">`. |
 | `i18n.js` | `I18N` — **all UI text**, `en:` block then `sr:` block; `setsWord()` (Serbian plurals). |
-| `starter.js` | `STARTER` 4-day program (texts as `[en, sr]`), `starterProgram()`, `tr()`. |
+| `programs.js` | **Program library data** (no imports): `PROGRAMS` (ready-made programs, texts as `[en, sr]`), `X` (exercise names by id), `REFS` (research sources shown in the app). Rules at the top of the file. |
+| `starter.js` | `STARTER` (= first program, the original 4-day plan), `programWorkouts(id)`, `starterProgram()`, `programIdOf()`, `tr()` (built-in texts in the current language, for every program). |
+| `library.js` | Program library sheet: list + goal filter, detail, `openPrograms()`, `useProgram(id)`. Opened from Profile → Programs, the empty week and the first visit. |
 | `state.js` | `state`, `loadState()`, `save()`, `replaceState()`, **`normalizeState()` (repairs old/broken data)**, `t()`, `esc()`, `uid()`, `lang`, `program()`, `onSaved()`/`onSaveFailed()` hooks. |
 | `dates.js` | Week maths (Monday-based ISO weeks), date/number formatting, `viewMonday` + `setViewMonday()`. |
 | `data.js` | `sessionData`, `setsOf`, `bestSet`, `lastSets`, `setText`, `num`, `plannedCount`. |
@@ -80,7 +83,7 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `progress.js` | `entriesFor()`, `openProgress()`, `renderProgress()` (hand-made SVG chart, no library). |
 | `welcome.js` | First-visit flow, how-to guide, `setLang()`. |
 | `profile.js` | `computeStats()`, `renderProfile()`, name/language/theme settings, delete all. |
-| `controls.js` | `exportBackup()`, restore, load starter, backup reminder (`renderNag()`). |
+| `controls.js` | `exportBackup()`, restore, backup reminder (`renderNag()`). |
 | `achievements.js` | `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
 | `clock.js` | Header clock. |
 | `calendar.js` | Training calendar in the profile (GitHub-style day grid), `sessionDay()` (real day via `doneAt`), `calendarDays()`. |
@@ -159,9 +162,15 @@ make code tolerate them missing (see how `setsOf()` falls back from `sets` to `w
 `data-i18n="key"` (sets innerHTML), `data-i18n-ph` (placeholder) or `data-i18n-aria` (aria-label + title).
 `applyStatic()` fills them in on load and on language change.
 
-**Change the starter program** (`js/starter.js`): edit `STARTER`. Each text is `[en, sr]`. Keep existing
-`id`s, because saved ticks and sets are keyed by id. A new exercise needs a new unique id.
-Users only get the new starter when they tap "Load starter program" in their profile.
+**Change or add a ready-made program** (`js/programs.js`): edit `PROGRAMS` (read the rules at the top of the file).
+Each text is `[en, sr]`; build exercises with `e(id, "3 × 8–12")` (name from `X`, Serbian sets made automatically)
+and workouts with `w(id, dow, title, sub, [...])`.
+- **Workout ids** must be unique across all programs and **never change** (saved ticks are keyed by them).
+- **Exercise ids** are shared: the same movement always uses the same id (`squat`, `bench`, `hipthrust`…) so charts
+  and strength badges carry over when someone switches programs. A different movement gets a new id in `X`.
+- Give every program research `refs` (keys of `REFS`) and a `how` (how to progress). Keep it evidence-based.
+- Users only get changes when they pick the program again (Profile → Programs). `check.js` checks ids, text
+  lengths, both languages and that English and Serbian names count for the same badge.
 
 **Add a profile stat** (`js/profile.js`): compute it in `computeStats()`, add a `card(...)` in
 `renderProfile()`, add its label keys to both languages.
@@ -199,7 +208,7 @@ node tools/e2e.js
   `t("key")` / `data-i18n` / `$("id")` exists, badges have 6 rising tiers, files are linked and in `SHELL`,
   `APP_VERSION` bumped, plus unit tests (week maths incl. week 53, number parsing, best set, exercise-name
   matching, Serbian plurals, data repair, badge metrics).
-- `e2e.js` (~1 min, needs Chrome/Edge): ~41 scenarios in a 375×812 frame — first visit, logging weird inputs,
+- `e2e.js` (~1 min, needs Chrome/Edge): ~43 scenarios in a 375×812 frame — first visit, logging weird inputs,
   editing, deleting, corrupted / malformed / very old saved data, storage full, backup round-trip and bad
   restore files, HTML injection in names, Serbian on every screen, long names, swipe, timer, 3 years of data
   (speed). Every scenario also fails on any JavaScript error or sideways scrolling.

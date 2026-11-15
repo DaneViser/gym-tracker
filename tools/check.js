@@ -7,7 +7,7 @@
 //  3. every t("key") in the code and every data-i18n key in index.html exists
 //  4. every $("id") in the code exists in index.html, and ids are unique
 //  5. badges: 6 rising tiers (for men, women and general), valid icons, both languages
-//  6. starter program texts in both languages, unique ids
+//  6. program library: texts in both languages, unique ids, length limits, badge matching
 //  7. every css/js file is linked/imported and listed in sw.js for offline use (and nothing missing)
 //  8. APP_VERSION was bumped when code changed (compares with the previous commit on CI)
 //  9. unit tests: week maths, number parsing, best set, exercise-name matching, plurals, data repair
@@ -129,19 +129,52 @@ for (const [f, s] of [["index.html", html], ...Object.entries(jsSrc).map(([f, s]
   s.split("\n").forEach((line, i) => { const m = line.match(emoji); if (m) fail("icons", f + ":" + (i + 1) + " contains an emoji (" + m[0] + ") — use an icon from js/icons.js"); });
 }
 
-// ---------------------------------------------------------------- 6. starter program
-console.log("6. starter program");
-const starterIds = new Set();
-for (const w of mod.starter.STARTER) {
-  check("starter", !starterIds.has(w.id), "duplicate workout id " + w.id); starterIds.add(w.id);
-  check("starter", Number.isInteger(w.dow) && w.dow >= 0 && w.dow <= 6, w.id + ": dow must be 0..6");
-  for (const f of ["title", "sub"]) check("starter", w[f].length === 2 && w[f].every(Boolean), w.id + "." + f + " must be [en, sr]");
-  const exIds = new Set();
-  for (const e of w.ex) {
-    check("starter", !exIds.has(e.id), w.id + ": duplicate exercise id " + e.id); exIds.add(e.id);
-    for (const f of ["name", "sets"]) check("starter", e[f].length === 2 && e[f].every(Boolean), w.id + "/" + e.id + "." + f + " must be [en, sr]");
+// ---------------------------------------------------------------- 6. program library
+console.log("6. program library (js/programs.js)");
+const { PROGRAMS, REFS } = mod.programs;
+const liftByName = s => { for (const k in mod.achievements.LIFTS) { const L = mod.achievements.LIFTS[k]; if (L.inc.test(s) && !L.exc.test(s)) return k; } return null; };
+const pair = (v, max, where) => {
+  check("programs", Array.isArray(v) && v.length === 2 && v.every(x => typeof x === "string" && x.trim()), where + " must be [en, sr]");
+  if (max && Array.isArray(v)) v.forEach(x => check("programs", String(x).length <= max, where + " longer than " + max + " chars (would be cut): " + x));
+};
+const progIds = new Set(), workoutIds = new Set(), liftOfId = {};
+eq("programs", PROGRAMS[0].workouts.map(w => w.id), ["upper1", "lowerA", "upper2", "lowerB"], "first program is the original starter (ids must never change)");
+for (const p of PROGRAMS) {
+  check("programs", !progIds.has(p.id), "duplicate program id " + p.id); progIds.add(p.id);
+  for (const f of ["title", "desc", "how"]) pair(p[f], 0, p.id + "." + f);
+  check("programs", p.goals.length && p.goals.every(g => mod.library.GOALS.includes(g) && g !== "all"), p.id + ": unknown goal");
+  check("programs", ["beginner", "intermediate", "advanced"].includes(p.level), p.id + ": unknown level");
+  check("programs", p.refs.length > 0 && p.refs.every(r => REFS[r]), p.id + ": every program needs research refs that exist in REFS");
+  check("programs", new Set(p.workouts.map(w => w.dow)).size === p.workouts.length, p.id + ": two workouts on the same day");
+  for (const w of p.workouts) {
+    check("programs", !workoutIds.has(w.id), "workout id used twice across programs: " + w.id); workoutIds.add(w.id);
+    check("programs", Number.isInteger(w.dow) && w.dow >= 0 && w.dow <= 6, w.id + ": dow must be 0..6");
+    pair(w.title, 40, w.id + ".title"); pair(w.sub, 60, w.id + ".sub");
+    const exIds = new Set();
+    for (const e of w.ex) {
+      check("programs", !exIds.has(e.id), w.id + ": duplicate exercise id " + e.id); exIds.add(e.id);
+      pair(e.name, 60, w.id + "/" + e.id + ".name"); pair(e.sets, 30, w.id + "/" + e.id + ".sets");
+      const en = liftByName(e.id + " " + e.name[0]), sr = liftByName(e.id + " " + e.name[1]);
+      check("programs", en === sr, w.id + "/" + e.id + ": English and Serbian names count for different badges (" + en + " / " + sr + ")");
+      if (e.id in liftOfId) check("programs", liftOfId[e.id] === en, "exercise id " + e.id + " counts for different badges in different programs");
+      else liftOfId[e.id] = en;
+    }
   }
 }
+for (const [k, [cite, what]] of Object.entries(REFS)) { check("programs", typeof cite === "string" && cite.length > 5, "REFS." + k + " needs a citation"); pair(what, 0, "REFS." + k); }
+// The exercises that should count for strength badges really do (guards against name typos).
+for (const [id, lift] of Object.entries({ squat: "squat", bench: "bench", deadlift: "deadlift", ohp: "ohp", pullups: "pullups", hipthrust: "hipthrust", dips: "dips", pushups: "pushups", plank: "plank", farmer: "farmer" }))
+  eq("programs", liftOfId[id], lift, "exercise id " + id + " counts for the " + lift + " badge");
+for (const id of ["goblet", "dbrdl", "rdl", "bss", "pike", "invrow", "glutebridge", "dbpress", "incdb", "dbohp", "latpd", "sideplank"])
+  eq("programs", liftOfId[id], null, "variant " + id + " does not count for a strength badge");
+// Every library program loads as plain workouts, and is recognised as itself.
+for (const p of PROGRAMS) {
+  const ws = mod.starter.programWorkouts(p.id);
+  check("programs", ws.length === p.workouts.length && ws.every(w => typeof w.title === "string" && w.ex.every(e => typeof e.name === "string")), p.id + ": programWorkouts() gives plain text workouts");
+  eq("programs", mod.starter.programIdOf(ws), p.id, p.id + ": programIdOf() recognises it");
+}
+eq("programs", mod.starter.tr("e", "bench", "sets", "5 × 5"), "5 × 5", "tr() finds sets texts from any program");
+eq("programs", mod.starter.tr("e", "bss", "sets", "3 × 8–12 / nozi"), "3 × 8–12 / leg", "tr() translates sets from any program back to English");
 
 // ---------------------------------------------------------------- 7. files wired up
 console.log("7. files linked and available offline");

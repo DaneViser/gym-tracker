@@ -31,12 +31,12 @@ export const LIFTS = {
   squat: { inc: /squat|čučanj|cucanj/i, exc: /split|bugar|bulgar|goblet|hack|jump|skok/i },
   deadlift: { inc: /deadlift|mrtvo dizanje/i, exc: /romanian|rumunsk|rdl|stiff|single.?leg|jednoj nozi/i },
   ohp: { inc: /overhead press|\bohp\b|military press|potisak iznad glave|vojnički potisak/i, exc: /machine|mašin|seated|sedeći|sede/i },
-  pullups: { inc: /pull.?ups?|chin.?ups?|zgib/i, exc: /assist|asist|band|gum[ae]|negativ|lat|pulldown|mašin|machine/i, reps: true },
+  pullups: { inc: /pull.?ups?|chin.?ups?|zgib/i, exc: /assist|asist|band|gum[ae]|negativ|lat|pulldown|mašin|machine|inverted|australijsk/i, reps: true },
   dips: { inc: /\bdips?\b|propadanj|razboj/i, exc: /bench dip|assist|asist|mašin|machine|klup/i, reps: true },
   farmer: { inc: /farmer|farmersk/i, exc: /^$/ },
   hipthrust: { inc: /hip.?thrust|hip trast|potisak kuk/i, exc: /machine|mašin|single|jednoj|band|gum[ae]|bridge|most/i },
   plank: { inc: /plank|izdržaj/i, exc: /side|bočn|reverse|obrnut/i, time: true },
-  pushups: { inc: /push.?ups?|sklek/i, exc: /knee|kolen|incline|kos[aoi]|wall|zid|assist|asist/i, reps: true }
+  pushups: { inc: /push.?ups?|sklek/i, exc: /knee|kolen|incline|kos[aoi]|wall|zid|assist|asist|pike/i, reps: true }
 };
 // Seconds from "90", "90s" or "1:30".
 export function secs(v) {

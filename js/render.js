@@ -46,7 +46,7 @@ export function render() {
 
   const container = $("sessions");
   container.innerHTML = "";
-  if (!total) { container.innerHTML = '<div class="empty-state">' + t("noWorkouts") + '</div>'; return; }
+  if (!total) { container.innerHTML = '<div class="empty-state">' + t("noWorkouts") + '<button type="button" class="pill primary" id="emptyProgs">' + esc(t("browseProgs")) + "</button></div>"; return; }
   const todayDow = (today.getDay() + 6) % 7;
   sorted().forEach(sess => container.appendChild(renderSession(sess, key, isThisWeek, todayDow)));
 }

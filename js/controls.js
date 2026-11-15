@@ -1,4 +1,4 @@
-// Data buttons: backup (exportBackup), restore, load starter; backup reminder card.
+// Data buttons: backup (exportBackup), restore; backup reminder card. (Programs: library.js)
 
 import { $ } from "./dom.js";
 import { starterProgram } from "./starter.js";
@@ -66,10 +66,6 @@ export function init() {
   $("prevWk").addEventListener("click", () => { setViewMonday(addDays(viewMonday, -7)); render(); });
   $("nextWk").addEventListener("click", () => { setViewMonday(addDays(viewMonday, 7)); render(); });
   $("todayBtn").addEventListener("click", () => { setViewMonday(thisMonday); render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
-  $("templateBtn").addEventListener("click", () => {
-    if (program().length && !confirm(t("replaceConfirm"))) return;
-    state.program = starterProgram(); editing.clear(); save(); render(); renderProfile(); toast(t("starterLoaded"));
-  });
   $("exportBtn").addEventListener("click", exportBackup);
   $("nagBackup").addEventListener("click", exportBackup);
   $("nagLater").addEventListener("click", () => { state.backupSnooze = Date.now() + 7 * DAY; save(); renderNag(); });

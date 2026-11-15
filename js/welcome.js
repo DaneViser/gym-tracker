@@ -1,16 +1,16 @@
-// First-visit welcome (name, starter or own program), how-to guide, setLang().
+// First-visit welcome (name, ready-made or own program), how-to guide, setLang().
 
 import { $ } from "./dom.js";
-import { starterProgram } from "./starter.js";
 import { save, setLangValue, state, t } from "./state.js";
 import { applyStatic, render, toast } from "./render.js";
 import { openProgress } from "./progress.js";
 import { renderProfile } from "./profile.js";
+import { openPrograms } from "./library.js";
 
 // ======================================================================
 // Welcome / guide / language
 // ======================================================================
-export let guideOnly = false, wMode = "first";
+export let guideOnly = false, wMode = "first", pickAfter = false; // pickAfter: open the program library when the welcome closes
 export function showStep(n) {
   $("step1").hidden = n !== 1; $("step2").hidden = n !== 2;
   [...$("stepdots").children].forEach((d, i) => d.classList.toggle("on", i === n - 1));
@@ -53,7 +53,7 @@ export function init() {
     state.name = name;
     if (!$("programChoice").hidden) {
       const choice = document.querySelector('input[name="start"]:checked').value;
-      state.program = choice === "template" ? starterProgram() : [];
+      state.program = []; pickAfter = choice === "template";
     }
     if (!Array.isArray(state.program)) state.program = [];
     save(); render();
@@ -62,7 +62,11 @@ export function init() {
   });
   $("nameInput").addEventListener("keydown", e => { if (e.key === "Enter") $("next1").click(); });
   $("back2").addEventListener("click", () => showStep(1));
-  $("finish").addEventListener("click", () => { if (!guideOnly) { state.onboarded = true; save(); } closeWelcome(); });
+  $("finish").addEventListener("click", () => {
+    if (!guideOnly) { state.onboarded = true; save(); }
+    closeWelcome();
+    if (pickAfter && !guideOnly) { pickAfter = false; openPrograms(); }
+  });
   $("welcome").addEventListener("click", e => { if (e.target === $("welcome") && state.onboarded) closeWelcome(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && state.onboarded && $("welcome").classList.contains("show")) closeWelcome(); });
   $("langSeg").addEventListener("click", e => { const b = e.target.closest("button[data-lang]"); if (b) setLang(b.dataset.lang); });

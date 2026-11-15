@@ -30,6 +30,7 @@
 <link rel="stylesheet" href="css/timer.css">
 <link rel="stylesheet" href="css/calendar.css">
 <link rel="stylesheet" href="css/nutrition.css">
+<link rel="stylesheet" href="css/library.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -175,7 +176,7 @@
     <div class="pr-list">
       <button class="pr-row pr-btn" id="exportBtn" type="button"><span><b data-i18n="backup"></b><small data-i18n="backupD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
       <button class="pr-row pr-btn" id="importBtn" type="button"><span><b data-i18n="restore"></b><small data-i18n="restoreD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
-      <button class="pr-row pr-btn" id="templateBtn" type="button"><span><b data-i18n="loadStarter"></b><small data-i18n="loadStarterD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
+      <button class="pr-row pr-btn" id="templateBtn" type="button"><span><b data-i18n="progsRow"></b><small data-i18n="progsRowD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
       <button class="pr-row pr-btn danger" id="wipeBtn" type="button"><span><b data-i18n="wipe"></b><small data-i18n="wipeD"></small></span><i class="chev-r" data-icon="chevron-right"></i></button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
@@ -235,6 +236,24 @@
 
 <!-- Celebration card (new record / achievement unlocked) -->
 <button class="celebrate" id="celebrate" type="button" hidden></button>
+
+<!-- Program library (js/library.js) -->
+<div class="modal" id="progs" role="dialog" aria-modal="true" aria-labelledby="pgTitle">
+  <div class="sheet tall">
+    <div class="p-top">
+      <h2 id="pgTitle"><i data-icon="list-check"></i> <span data-i18n="progsTitle"></span></h2>
+      <button class="p-close" id="pgClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button>
+    </div>
+    <div id="pgList">
+      <p class="lead" data-i18n="progsLead"></p>
+      <div class="pg-chips" id="pgChips" role="group"></div>
+      <div class="pg-cards" id="pgCards"></div>
+      <p class="note" data-i18n="progsBoth"></p>
+      <p class="note" data-i18n="progsCare"></p>
+    </div>
+    <div id="pgDetail" hidden></div>
+  </div>
+</div>
 
 <!-- Welcome / guide -->
 <div class="modal" id="welcome" role="dialog" aria-modal="true" aria-labelledby="wTitle">

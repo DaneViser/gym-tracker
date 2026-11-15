@@ -48,6 +48,10 @@ async function onboard(name = "Dane", start = "template") {
   app.type(app.$("nameInput"), name, { change: false });
   app.click(app.q('input[name="start"][value="' + start + '"]'));
   app.click(app.$("next1")); app.click(app.$("finish"));
+  if (start === "template") { // "Ready-made program": the library opens, pick the original 4-day plan
+    assert(app.shown("progs"), "program library should open after the welcome");
+    app.click(app.q('.pg-card[data-pid="work"]')); app.click(app.$("pgUse"));
+  }
   await sleep(50);
 }
 function noSideScroll(where) {
@@ -627,7 +631,9 @@ test("no emojis anywhere, and every icon actually draws (both languages, every s
       () => app.click(app.$("achOpen")), () => app.click(app.qa(".ach").find(b => b.querySelector(".tc-i") || true)),
       () => { app.click(app.$("achClose")); app.click(app.qa(".ach")[0]); }, () => { app.key("Escape"); app.key("Escape"); app.click(app.$("prClose")); app.click(app.$("helpBtn")); },
       () => { app.click(app.$("finish")); app.$("updateBar").hidden = false; app.qa("details.info").forEach(d => { d.open = true; }); },
-      () => { app.click(app.$("nutriBtn")); app.type(app.$("nCm"), "180"); app.type(app.$("nAge"), "30"); }
+      () => { app.click(app.$("nutriBtn")); app.type(app.$("nCm"), "180"); app.type(app.$("nAge"), "30"); },
+      () => { app.click(app.$("nClose")); app.click(app.$("profileBtn")); app.click(app.$("templateBtn")); },
+      () => app.click(app.q('.pg-card[data-pid="glutes4"]'))
     ];
     for (const step of visit) {
       step();
@@ -639,6 +645,60 @@ test("no emojis anywhere, and every icon actually draws (both languages, every s
       assert(broken.length === 0, broken.length + " icon(s) with no drawing (unknown icon name?)");
     }
   }
+});
+
+test("program library: filter by goal, read a program, cancel, switch; history and charts keep working", async () => {
+  const { PROGRAMS } = await import("/js/programs.js");
+  const weeks = { [weekOf(-1)]: { upper1: { done: true, ex: { bench: true }, w: {}, sets: { bench: [{ w: "100", r: "5" }] } }, lowerA: { done: true, ex: {}, w: {}, sets: { squat: [{ w: "120", r: "5" }] } } } };
+  await boot({ storage: starterUser({ weeks }) });
+  app.click(app.$("profileBtn")); app.click(app.$("templateBtn"));
+  assert(app.shown("progs"), "library did not open from the profile");
+  assertEq(app.qa(".pg-card").length, PROGRAMS.length, "all programs listed");
+  assertEq(app.qa(".pg-card.cur").map(c => c.dataset.pid), ["work"], "the starter plan is marked as current");
+  app.click(app.q('.pg-chip[data-g="home"]'));
+  assert(app.qa(".pg-card").length >= 1 && app.qa(".pg-card").every(c => PROGRAMS.find(p => p.id === c.dataset.pid).goals.includes("home")), "goal filter shows only matching programs");
+  app.click(app.q('.pg-chip[data-g="all"]'));
+  app.click(app.q('.pg-card[data-pid="ul4"]'));
+  assert(app.$("pgList").hidden && !app.$("pgDetail").hidden, "detail view not shown");
+  assertEq(app.qa(".pg-day").length, 4, "detail lists the 4 workouts");
+  assert(app.qa(".pg-refs li").length >= 2, "research sources listed");
+  noSideScroll("(program detail)");
+  app.click(app.$("pgBack")); assert(!app.$("pgList").hidden, "back did not return to the list");
+  app.click(app.q('.pg-card[data-pid="ul4"]'));
+  app.confirmAnswer = false; app.click(app.$("pgUse"));
+  assert(app.shown("progs") && card("upper1"), "cancelling the confirm must change nothing");
+  app.confirmAnswer = true; app.click(app.$("pgUse")); await sleep(30);
+  assert(!app.shown("progs") && !app.shown("profile"), "sheets should close after choosing");
+  assertEq(app.qa(".session").map(c => c.dataset.sid).sort(), ["ul4la", "ul4lb", "ul4ua", "ul4ub"], "new workouts shown");
+  assertEq(Object.keys(app.stored().weeks[weekOf(-1)]).sort(), ["lowerA", "upper1"], "history kept");
+  app.click(app.$("progressBtn"));
+  const opt = app.q('#pSelect option[value="bench"]');
+  assert(opt && !opt.textContent.includes("("), "bench chart still has last week's data after switching");
+  app.click(app.$("pClose"));
+  app.click(app.$("profileBtn")); app.click(app.$("templateBtn"));
+  assertEq(app.qa(".pg-card.cur").map(c => c.dataset.pid), ["ul4"], "new program marked as current");
+});
+
+test("program library: empty week button, first visit picker can be closed, programs in Serbian", async () => {
+  await boot({ storage: null });
+  app.type(app.$("nameInput"), "Ana", { change: false });
+  app.click(app.q('input[name="start"][value="template"]'));
+  app.click(app.$("next1")); app.click(app.$("finish"));
+  assert(app.shown("progs"), "library should open after the welcome");
+  app.click(app.$("pgClose"));
+  assertEq(app.qa(".session").length, 0, "no workouts until a program is picked");
+  app.click(app.$("emptyProgs"));
+  assert(app.shown("progs"), "empty-week button should open the library");
+  app.click(app.q('.pg-card[data-pid="home3"]')); app.click(app.$("pgUse")); await sleep(30);
+  assertEq(app.qa(".session").length, 3, "home program has 3 workouts");
+  assertEq(app.stored().program[0].id, "homea", "program saved");
+  await boot({ storage: starterUser(), lang: "sr" });
+  app.click(app.$("profileBtn")); app.click(app.$("templateBtn"));
+  assert(/Programi/.test(app.text(app.$("pgTitle"))), "library title not in Serbian");
+  app.click(app.q('.pg-card[data-pid="fb3"]'));
+  assert(/Kako da napreduješ/.test(app.text(app.$("pgDetail"))), "detail not in Serbian");
+  app.click(app.$("pgUse")); await sleep(30);
+  assert(/Celo telo A/.test(app.text(app.$("sessions"))) && /Čučanj/.test(app.text(app.$("sessions"))), "workouts not in Serbian");
 });
 
 // =====================================================================================
