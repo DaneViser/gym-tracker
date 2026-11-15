@@ -1,0 +1,29 @@
+/* Calorie calculator sheet. */
+
+.n-form { display: grid; gap: 12px; margin-bottom: 16px; }
+.row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.row3 .txt { padding: 0 10px; }
+.n-form .seg { align-self: start; }
+.n-main {
+  text-align: center; padding: 16px 12px 14px; border-radius: 16px;
+  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+}
+.n-main small { display: block; color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; }
+.n-main b { display: block; font-size: 40px; font-weight: 800; letter-spacing: -.02em; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.n-main span { font-weight: 700; }
+.n-main em { display: block; font-style: normal; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.n-macros { margin: 12px 0; }
+.n-macros .stat b { font-size: 18px; }
+.n-macros .stat .sub { display: block; font-size: 12px; color: var(--muted); }
+.n-macros .stat.p { box-shadow: inset 0 3px 0 var(--accent); }
+.n-macros .stat.f { box-shadow: inset 0 3px 0 color-mix(in srgb, var(--accent) 55%, var(--surface)); }
+.n-macros .stat.c { box-shadow: inset 0 3px 0 color-mix(in srgb, var(--accent) 25%, var(--surface)); }
+.n-rows .pr-row { min-height: 46px; padding: 10px 14px; }
+.n-rows .pr-row > span:first-child { font-weight: 500; color: var(--muted); }
+.n-rows .pr-row b { font-variant-numeric: tabular-nums; }
+.n-warn { margin: 12px 0 0; }
+.n-empty { text-align: center; color: var(--muted); padding: 18px 10px; background: var(--surface-2); border-radius: 14px; margin: 0; }
+@media (max-width: 420px) {
+  .n-main b { font-size: 36px; }
+  .n-rows .pr-row { flex-wrap: nowrap; }
+}

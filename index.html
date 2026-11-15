@@ -28,6 +28,8 @@
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/notices.css">
 <link rel="stylesheet" href="css/timer.css">
+<link rel="stylesheet" href="css/calendar.css">
+<link rel="stylesheet" href="css/nutrition.css">
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
@@ -44,6 +46,7 @@
       </div>
       <div class="btns">
         <button class="icon-btn" id="progressBtn" data-i18n-aria="progress"><i data-icon="chart-line"></i></button>
+        <button class="icon-btn" id="nutriBtn" data-i18n-aria="nutriTitle"><i data-icon="tools-kitchen-2"></i></button>
         <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
         <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial"></span></button>
       </div>
@@ -140,6 +143,8 @@
       <i class="chev-r" data-icon="chevron-right"></i>
     </button>
 
+    <div class="cal" id="prCalendar"></div>
+
     <h3 class="pr-h" data-i18n="settings"></h3>
     <div class="pr-list">
       <label class="pr-row"><span data-i18n="nameField"></span>
@@ -176,6 +181,35 @@
     <input type="file" id="importFile" accept="application/json,.json" hidden>
     <p class="note" data-i18n="localNote"></p>
     <p class="note" id="prStorage"></p>
+  </div>
+</div>
+
+<!-- Calorie calculator -->
+<div class="modal" id="nutri" role="dialog" aria-modal="true" aria-labelledby="nTitle">
+  <div class="sheet tall">
+    <div class="p-top">
+      <h2 id="nTitle"><i data-icon="tools-kitchen-2"></i> <span data-i18n="nutriTitle"></span></h2>
+      <button class="p-close" id="nClose" type="button" data-i18n-aria="close"><i data-icon="x"></i></button>
+    </div>
+    <p class="lead" data-i18n="nutriLead"></p>
+    <div class="n-form">
+      <div class="row3">
+        <label class="field"><span data-i18n="nWeight"></span><input class="txt" id="nKg" type="text" inputmode="decimal" maxlength="5" placeholder="kg"></label>
+        <label class="field"><span data-i18n="nHeight"></span><input class="txt" id="nCm" type="text" inputmode="decimal" maxlength="5" placeholder="cm"></label>
+        <label class="field"><span data-i18n="nAge"></span><input class="txt" id="nAge" type="text" inputmode="numeric" maxlength="3"></label>
+      </div>
+      <div class="field"><span data-i18n="nSex"></span>
+        <div class="seg" id="nSex"><button type="button" data-v="m" data-i18n="sexM"></button><button type="button" data-v="f" data-i18n="sexF"></button><button type="button" data-v="x" data-i18n="sexX"></button></div>
+      </div>
+      <label class="field"><span data-i18n="nJobLbl"></span><select class="sel" id="nJob"></select></label>
+      <div class="row2">
+        <label class="field"><span data-i18n="nSessions"></span><select class="sel" id="nSessions"></select></label>
+        <label class="field"><span data-i18n="nMinutes"></span><select class="sel" id="nMinutes"></select></label>
+      </div>
+      <label class="field"><span data-i18n="nGoalLbl"></span><select class="sel" id="nGoal"></select></label>
+    </div>
+    <div id="nOut" aria-live="polite"></div>
+    <p class="note" data-i18n="nDisclaimer"></p>
   </div>
 </div>
 

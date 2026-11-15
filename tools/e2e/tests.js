@@ -34,7 +34,7 @@ async function boot({ storage = {}, lang = "en", rawState, confirmAnswer = true,
     w, d, errors, alerts, confirmAnswer,
     $: id => d.getElementById(id),
     q: s => d.querySelector(s), qa: s => [...d.querySelectorAll(s)],
-    click(el) { assert(el, "element to click not found"); el.click(); },
+    click(el) { assert(el, "element to click not found"); if (el.click) el.click(); else el.dispatchEvent(new w.MouseEvent("click", { bubbles: true })); }, // SVG shapes have no .click()
     type(el, v, { change = true } = {}) { assert(el, "input not found"); el.value = v; el.dispatchEvent(new w.Event("input", { bubbles: true })); if (change) el.dispatchEvent(new w.Event("change", { bubbles: true })); },
     key(k, el) { (el || d).dispatchEvent(new w.KeyboardEvent("keydown", { key: k, bubbles: true })); },
     shown: id => d.getElementById(id).classList.contains("show"),
@@ -559,6 +559,64 @@ test("sounds: 'All' is the default and plays every sound, 'Timer' only beeps for
   localStorage.removeItem("gymtracker.sound");
 });
 
+test("training calendar: past workouts coloured, tap shows the day, today lights up when ticked", async () => {
+  // last week: Upper 1 done on its day (Tue); Lower A (Wed or Thu) ticked on Thursday → must show on Thursday
+  const lastMon = new Date(); lastMon.setHours(0, 0, 0, 0); lastMon.setDate(lastMon.getDate() - (lastMon.getDay() + 6) % 7 - 7);
+  const thu = new Date(lastMon); thu.setDate(thu.getDate() + 3); thu.setHours(19);
+  const key = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const tue = new Date(lastMon); tue.setDate(tue.getDate() + 1);
+  await boot({ storage: starterUser({ weeks: { [weekOf(-1)]: { upper1: { done: true, ex: {}, w: {}, sets: {} }, lowerA: { done: true, doneAt: thu.getTime(), ex: {}, w: {}, sets: {} } } } }) });
+  app.click(app.$("profileBtn"));
+  assert(app.q('#prCalendar rect[data-d="' + key(tue) + '"]').classList.contains("l2"), "Tuesday (planned day) should be coloured");
+  assert(app.q('#prCalendar rect[data-d="' + key(thu) + '"]').classList.contains("l2"), "Thursday (the day it was ticked) should be coloured");
+  const wed = new Date(lastMon); wed.setDate(wed.getDate() + 2);
+  assert(app.q('#prCalendar rect[data-d="' + key(wed) + '"]').classList.contains("l0"), "Wednesday should be empty (done on Thursday instead)");
+  app.click(app.q('#prCalendar rect[data-d="' + key(thu) + '"]'));
+  assert(app.text(app.q(".cal-info")).includes("Lower A"), "tapping a day should show what was done");
+  assert(/Training days: 2/.test(app.text(app.q(".cal-head"))), "should count 2 training days: " + app.text(app.q(".cal-head")));
+  noSideScroll("calendar");
+  app.click(app.$("prClose"));
+  // tick any workout done today → today's square lights up
+  openCard("upper1"); app.click(card("upper1").querySelector(".daycheck input"));
+  app.click(app.$("profileBtn"));
+  assert(!app.q("#prCalendar rect.today").classList.contains("l0"), "today should light up after finishing a workout");
+});
+
+test("calorie calculator: prefilled weight, correct numbers, goal changes, bad input, remembered", async () => {
+  await boot({ storage: starterUser({ profile: { sex: "m", bw: "80" } }) });
+  app.click(app.$("nutriBtn"));
+  assert(app.shown("nutri"), "calculator should open");
+  assertEq(app.$("nKg").value, "80", "weight should come from the profile");
+  assert(app.q(".n-empty"), "should ask for height and age first");
+  app.type(app.$("nCm"), "180"); app.type(app.$("nAge"), "30");
+  app.type(app.$("nJob"), "desk"); app.type(app.$("nSessions"), "4"); app.type(app.$("nMinutes"), "60"); app.type(app.$("nGoal"), "keep");
+  assertEq(app.text(app.q(".n-main b")), "2,320", "maintenance calories for the test man");
+  assert(/Protein/.test(app.text(app.$("nOut"))) && /144 g/.test(app.text(app.$("nOut"))), "protein should be 144 g");
+  app.type(app.$("nGoal"), "lose05");
+  assertEq(app.text(app.q(".n-main b")), "1,770", "500-ish kcal less to lose 0.5 kg/week");
+  assert(app.q(".n-warn"), "should warn that this is below resting burn");
+  app.type(app.$("nAge"), "abc");
+  assert(app.q(".n-empty"), "nonsense age should show the fill-in message, not a number");
+  app.type(app.$("nAge"), "30"); app.type(app.$("nKg"), "85,5");
+  noSideScroll("calorie calculator");
+  app.key("Escape"); assert(!app.shown("nutri"), "Escape should close it");
+  assertEq(app.stored().profile.bw, "85.5", "weight typed here should update the profile");
+  await boot({ reopen: true, storage: null, lang: null });
+  app.click(app.$("nutriBtn"));
+  assertEq([app.$("nCm").value, app.$("nAge").value, app.$("nGoal").value], ["180", "30", "lose05"], "inputs should be remembered");
+});
+
+test("calorie calculator in Serbian, for women, and switching men/women there is silent", async () => {
+  await boot({ storage: starterUser({ profile: { sex: "m", bw: "60" }, nutrition: { cm: "165", age: "28", job: "feet", sessions: "3", minutes: "45", goal: "lose05" } }), lang: "sr" });
+  app.click(app.$("nutriBtn"));
+  app.click(app.q('#nSex [data-v="f"]'));
+  assertEq(app.text(app.q(".n-main b")), "1.360", "woman's number (Serbian uses a dot for thousands)");
+  assert(/Proteini/.test(app.text(app.$("nOut"))), "result should be in Serbian");
+  await sleep(900);
+  assert(app.$("celebrate").hidden, "changing men/women must not trigger badge pop-ups");
+  assertEq(app.stored().profile.sex, "f", "choice should be shared with the profile");
+});
+
 test("no emojis anywhere, and every icon actually draws (both languages, every screen)", async () => {
   const weeks = { [weekOf(-1)]: { upper1: { done: true, ex: {}, w: {}, sets: { bench: [{ w: "100", r: "5" }], pullups: [{ w: "", r: "12" }] } } } };
   for (const lang of ["en", "sr"]) {
@@ -568,7 +626,8 @@ test("no emojis anywhere, and every icon actually draws (both languages, every s
       () => app.click(app.$("progressBtn")), () => { app.click(app.$("pClose")); app.click(app.$("profileBtn")); },
       () => app.click(app.$("achOpen")), () => app.click(app.qa(".ach").find(b => b.querySelector(".tc-i") || true)),
       () => { app.click(app.$("achClose")); app.click(app.qa(".ach")[0]); }, () => { app.key("Escape"); app.key("Escape"); app.click(app.$("prClose")); app.click(app.$("helpBtn")); },
-      () => { app.click(app.$("finish")); app.$("updateBar").hidden = false; app.qa("details.info").forEach(d => { d.open = true; }); }
+      () => { app.click(app.$("finish")); app.$("updateBar").hidden = false; app.qa("details.info").forEach(d => { d.open = true; }); },
+      () => { app.click(app.$("nutriBtn")); app.type(app.$("nCm"), "180"); app.type(app.$("nAge"), "30"); }
     ];
     for (const step of visit) {
       step();

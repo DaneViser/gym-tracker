@@ -95,6 +95,7 @@ export function renderSession(sess, key, isThisWeek, todayDow) {
   dc.addEventListener("change", e => {
     const s = sessionData(key, sess.id, true);
     s.done = e.target.checked;
+    if (s.done) s.doneAt = Date.now(); else delete s.doneAt; // the real day it was done (for the calendar)
     if (s.done) { toast(t("toastDone"), "circle-check"); playSound("done"); }
     save(); render();
   });
@@ -104,7 +105,7 @@ export function renderSession(sess, key, isThisWeek, todayDow) {
 export function maybeCompleteSession(key, sess) {
   const s = sessionData(key, sess.id, true);
   const req = sess.ex.filter(x => !x.optional);
-  if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; toast(t("toastDone"), "circle-check"); playSound("done"); return true; }
+  if (req.length && req.every(x => s.ex[x.id]) && !s.done) { s.done = true; s.doneAt = Date.now(); toast(t("toastDone"), "circle-check"); playSound("done"); return true; }
   return false;
 }
 

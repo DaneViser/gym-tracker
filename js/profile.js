@@ -12,6 +12,7 @@ import { renderAchievements } from "./achievements.js";
 import { storageProtected } from "./offline.js";
 import { icon } from "./icons.js";
 import { getSoundMode, playSound, setSoundMode } from "./sound.js";
+import { renderCalendar } from "./calendar.js";
 
 // ======================================================================
 // Profile
@@ -104,6 +105,7 @@ export function renderProfile() {
     (state.lastBackup ? t("lastBackup", { d: fmtLong(new Date(state.lastBackup)) }) : t("lastBackupNever"));
   $("prStorage").innerHTML = storageProtected ? icon("shield-check", "i") + " " + esc(t("storageSafe")) : esc(t("storageMaybe"));
   renderAchievements();
+  renderCalendar();
   const prof = state.profile || {};
   [...$("prSex").children].forEach(b => b.classList.toggle("on", b.dataset.v === (prof.sex || "x")));
   if (document.activeElement !== $("prBw")) $("prBw").value = prof.bw || "";

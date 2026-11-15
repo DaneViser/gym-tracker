@@ -84,7 +84,13 @@ for (const k of enKeys) {
 
 // ---------------------------------------------------------------- 3. every used key exists
 console.log("3. text keys used in code / page");
-for (const [f, s] of Object.entries(jsSrc)) for (const m of s.matchAll(/\bt\("([\w]+)"/g)) check("keys", m[1] in I18N.en, f + ": t(\"" + m[1] + "\") has no text");
+for (const [f, s] of Object.entries(jsSrc)) for (const m of s.matchAll(/\bt\("([\w]+)"/g)) {
+  if (m[1].endsWith("_")) check("keys", enKeys.some(k => k.startsWith(m[1])), f + ": no texts start with \"" + m[1] + "\" (used as t(\"" + m[1] + "\" + …))");
+  else check("keys", m[1] in I18N.en, f + ": t(\"" + m[1] + "\") has no text");
+}
+// keys built from a list (t("nJob_" + key)) must exist for every item of that list
+for (const [prefix, list] of [["nJob_", Object.keys(mod.nutrition.JOBS)], ["nGoal_", Object.keys(mod.nutrition.GOALS)], ["nGoalNote_", Object.keys(mod.nutrition.GOALS)], ["nWarn_", ["floor", "belowBmr"]]])
+  for (const k of list) check("keys", (prefix + k) in I18N.en, "missing text '" + prefix + k + "'");
 for (const m of html.matchAll(/data-i18n(?:-ph|-aria)?="(\w+)"/g)) check("keys", m[1] in I18N.en, "index.html: data-i18n key '" + m[1] + "' has no text");
 for (const c of mod.achievements.ACH_CATS) check("keys", c.key in I18N.en, "achievement category key '" + c.key + "' has no text");
 
@@ -211,6 +217,27 @@ S.setLangValue("en");
 const SA = mod.sound.soundAllowed;
 eq("sound", ["tap", "pop", "done", "fanfare", "timer"].map(k => [SA(k, "off"), SA(k, "timer"), SA(k, "all")]),
   [[false, false, true], [false, false, true], [false, false, true], [false, false, true], [false, true, true]], "sound rules (off / timer / all)");
+
+// calorie calculator (worked out by hand with Mifflin-St Jeor)
+const CN = mod.nutrition.calcNutrition;
+// man 80 kg, 180 cm, 30 y, desk job, 4 × 60 min, keep: BMR 1780; ×1.2 = 2136; workouts 4×4×80×1/7 = 182.9 → 2318.9
+eq("calories", (({ bmr, tdee, target, training, protein, fat, carbs }) => [bmr, tdee, target, training, protein, fat, carbs])(CN({ sex: "m", kg: 80, cm: 180, age: 30, job: "desk", sessions: 4, minutes: 60, goal: "keep" })),
+  [1780, 2320, 2320, 180, 144, 72, 274], "man, desk job, 4 workouts, keep");
+// woman 60 kg, 165 cm, 28 y, on feet, 3 × 45 min, lose 0.5: BMR 1330.25; ×1.375 + 77.1 = 1906.2; −550 = 1356 → 1360
+eq("calories", (r => [r.bmr, r.tdee, r.target, r.protein, r.warnings])(CN({ sex: "f", kg: 60, cm: 165, age: 28, job: "feet", sessions: 3, minutes: 45, goal: "lose05" })),
+  [1330, 1910, 1360, 120, []], "woman, on feet, 3 workouts, lose 0.5 kg/week");
+eq("calories", (r => [r.target, r.warnings])(CN({ sex: "f", kg: 45, cm: 150, age: 60, job: "desk", sessions: 0, goal: "lose05" })),
+  [1200, ["floor"]], "never below the safety floor");
+eq("calories", CN({ sex: "m", kg: 80, cm: 180, age: 30, job: "physical", sessions: 4, goal: "keep" }).tdee > CN({ sex: "m", kg: 80, cm: 180, age: 30, job: "desk", sessions: 4, goal: "keep" }).tdee, true, "physical job burns more than desk job");
+eq("calories", [CN({ kg: "abc", cm: 180, age: 30 }), CN({ kg: 80, cm: 180, age: 10 }), CN({ kg: 80, cm: 500, age: 30 }), CN({ kg: 80, cm: 180, age: 30, job: "pilot" })], [null, null, null, null], "nonsense inputs give no result");
+eq("calories", CN({ kg: 80, cm: 180, age: 30 }).bmr, 1700, "general (no sex) uses the average formula");
+
+// calendar: which day a workout lands on
+const CAL = mod.calendar, mon = day(2026, 11, 9);
+eq("calendar", CAL.sessionDay(mon, { doneAt: new Date(2026, 10, 12, 18, 30).getTime() }, { dow: 2 }).toDateString(), day(2026, 11, 12).toDateString(), "ticked on Thursday → shown on Thursday");
+eq("calendar", CAL.sessionDay(mon, { doneAt: new Date(2026, 10, 20).getTime() }, { dow: 2 }).toDateString(), day(2026, 11, 11).toDateString(), "ticked in a later week → planned day");
+eq("calendar", CAL.sessionDay(mon, {}, { dow: 5 }).toDateString(), day(2026, 11, 14).toDateString(), "old data without doneAt → planned day");
+eq("calendar", [undefined, { done: 0, active: true }, { done: 1 }, { done: 3 }].map(CAL.dayLevel), [0, 1, 2, 3], "colour levels");
 
 // exercise-name matching for the strength badges
 const names = {

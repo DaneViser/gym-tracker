@@ -56,6 +56,7 @@ export function normalizeState(raw) {
       const ex = {};
       if (isObj(r.ex)) for (const exId of Object.keys(r.ex)) ex[exId] = !!r.ex[exId];
       out[sid] = Object.assign({}, r, { done: !!r.done, ex, w, sets });
+      if (r.doneAt != null && !(Number.isFinite(+r.doneAt) && +r.doneAt > 0)) delete out[sid].doneAt; // when it was ticked done (ms)
     }
     weeks[wk] = out;
   }
@@ -91,6 +92,8 @@ export function normalizeState(raw) {
   } else delete s.profile;
   for (const k of ["lastBackup", "backupSnooze", "backupCount", "achVersion"]) if (s[k] != null && !Number.isFinite(+s[k])) delete s[k];
   if (s.achSeen != null && !isObj(s.achSeen)) delete s.achSeen;
+  if (isObj(s.nutrition)) { const n = s.nutrition; s.nutrition = { cm: str(n.cm, 6), age: str(n.age, 3), job: str(n.job, 12), sessions: str(n.sessions, 2), minutes: str(n.minutes, 3), goal: str(n.goal, 12) }; }
+  else delete s.nutrition;
   return s;
 }
 

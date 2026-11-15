@@ -46,6 +46,8 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `profile.css` | Profile sheet, settings rows, personal records. |
 | `notices.css` | Backup reminder card, "new version" bar, toast. |
 | `timer.css` | Rest timer bar. |
+| `calendar.css` | Training calendar. |
+| `nutrition.css` | Calorie calculator sheet. |
 | `responsive.css` | Phone overrides (`max-width: 420px`). **Must stay the last stylesheet.** |
 
 Modern CSS nesting and variables work in all current browsers, so use them freely in new CSS (no SCSS / build needed).
@@ -79,8 +81,10 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `welcome.js` | First-visit flow, how-to guide, `setLang()`. |
 | `profile.js` | `computeStats()`, `renderProfile()`, name/language/theme settings, delete all. |
 | `controls.js` | `exportBackup()`, restore, load starter, backup reminder (`renderNag()`). |
-| `achievements.js` | `ICONS` (Tabler, MIT), `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
+| `achievements.js` | `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
 | `clock.js` | Header clock. |
+| `calendar.js` | Training calendar in the profile (GitHub-style day grid), `sessionDay()` (real day via `doneAt`), `calendarDays()`. |
+| `nutrition.js` | Calorie calculator sheet; `calcNutrition()` = pure maths (Mifflin-St Jeor, job factor, workouts as MET, goal), sources in the file header. |
 | `sound.js` | `SOUNDS` (made in code with Web Audio — no files), `playSound(kind)`, Sounds setting (off / timer / all, default all). Tune a sound by editing its notes. |
 | `offline.js` | Service worker registration, `navigator.storage.persist()`, new-version check. |
 **Adding a new JS file:** import it from the file(s) that use it (and call its `init()` from `main.js` if it
@@ -115,14 +119,16 @@ state = {
         done: true,             // whole workout ticked
         ex:   { bench: true },  // exercise ticked
         sets: { bench: [ { w: "80", r: "8" }, … ] },  // strings, as typed
-        w:    { bench: "85" }   // best weight, kept for older data/compat
+        w:    { bench: "85" },  // best weight, kept for older data/compat
+        doneAt: 1763197200000  // optional: when it was ticked done (ms) — the calendar uses it for the real day
       } } }
 }
 ```
 
 Also on `state`: `lastBackup` (ms timestamp), `backupCount`, `backupSnooze` (ms; reminder hidden until then),
 `profile: { sex: "m" | "f" | "x", bw: "80" }` (optional, for strength badges), `achSeen: { badgeId: tierIndex }`
-(highest tier already celebrated; strength badges use `"bench:m"` etc.) and `achVersion`. Achievements themselves
+(highest tier already celebrated; strength badges use `"bench:m"` etc.), `achVersion`, and
+`nutrition: { cm, age, job, sessions, minutes, goal }` (calorie calculator inputs; body weight lives in `profile.bw`). Achievements themselves
 are never stored: they are recalculated from `weeks` + `program`.
 
 Other keys: `gymtracker.lang` (`en`/`sr`), `gymtracker.theme` (`light`/`dark`, missing = auto), `gymtracker.sound` (`off`/`timer`/`all`, missing = all).
@@ -193,7 +199,7 @@ node tools/e2e.js
   `t("key")` / `data-i18n` / `$("id")` exists, badges have 6 rising tiers, files are linked and in `SHELL`,
   `APP_VERSION` bumped, plus unit tests (week maths incl. week 53, number parsing, best set, exercise-name
   matching, Serbian plurals, data repair, badge metrics).
-- `e2e.js` (~1 min, needs Chrome/Edge): ~36 scenarios in a 375×812 frame — first visit, logging weird inputs,
+- `e2e.js` (~1 min, needs Chrome/Edge): ~41 scenarios in a 375×812 frame — first visit, logging weird inputs,
   editing, deleting, corrupted / malformed / very old saved data, storage full, backup round-trip and bad
   restore files, HTML injection in names, Serbian on every screen, long names, swipe, timer, 3 years of data
   (speed). Every scenario also fails on any JavaScript error or sideways scrolling.

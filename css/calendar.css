@@ -1,0 +1,24 @@
+/* Training calendar in the profile (GitHub-style day grid). Colours come from --accent so dark mode works. */
+
+.cal { margin: 14px 0 4px; padding: 12px 12px 10px; background: var(--surface-2); border-radius: 14px; }
+.cal-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.cal-head span { font-weight: 700; font-size: 14px; }
+.cal-head small { color: var(--muted); font-size: 12px; }
+.cal svg { display: block; width: 100%; height: auto; }
+.cal .cal-t { fill: var(--muted); font-size: 8px; font-family: inherit; }
+.cal rect { cursor: pointer; }
+.cal .l0 { fill: var(--surface); stroke: var(--line); stroke-width: 0.6; }
+.cal .l1 { fill: color-mix(in srgb, var(--accent) 30%, var(--surface)); }
+.cal .l2 { fill: color-mix(in srgb, var(--accent) 70%, var(--surface)); }
+.cal .l3 { fill: var(--accent); }
+.cal rect.today { stroke: var(--text); stroke-width: 1.2; }
+.cal rect.sel { stroke: var(--ok); stroke-width: 1.6; }
+.cal-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.cal-info { font-size: 12.5px; color: var(--muted); flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.cal-legend { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+.cal-legend small { margin: 0 3px; }
+.cal-legend i { width: 10px; height: 10px; border-radius: 2.5px; display: inline-block; }
+.cal-legend i.l0 { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.cal-legend i.l1 { background: color-mix(in srgb, var(--accent) 30%, var(--surface)); }
+.cal-legend i.l2 { background: color-mix(in srgb, var(--accent) 70%, var(--surface)); }
+.cal-legend i.l3 { background: var(--accent); }
