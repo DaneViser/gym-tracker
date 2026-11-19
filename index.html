@@ -15,7 +15,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Styles: one file per area, loaded in this order (responsive.css must stay last). -->
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
@@ -23,7 +23,6 @@
 <link rel="stylesheet" href="css/week.css">
 <link rel="stylesheet" href="css/workouts.css">
 <link rel="stylesheet" href="css/progress.css">
-<link rel="stylesheet" href="css/clock.css">
 <link rel="stylesheet" href="css/achievements.css">
 <link rel="stylesheet" href="css/profile.css">
 <link rel="stylesheet" href="css/notices.css">
@@ -41,17 +40,11 @@
       <p class="hello" id="hello"></p>
       <h1>Gym <span>Tracker</span></h1>
     </div>
-    <div class="hright">
-      <div class="mclock" id="mclock" role="img">
-        <span class="mt ghost" aria-hidden="true">88:88<span class="ms">:88</span></span>
-        <span class="mt" aria-hidden="true"><span id="mHM">--:--</span><span class="ms" id="mS">:--</span></span>
-      </div>
-      <div class="btns">
-        <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
-        <button class="icon-btn" id="progressBtn" data-i18n-aria="progress"><i data-icon="chart-line"></i></button>
-        <button class="icon-btn" id="nutriBtn" data-i18n-aria="nutriTitle"><i data-icon="tools-kitchen-2"></i></button>
-        <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial"></span></button>
-      </div>
+    <div class="btns">
+      <button class="icon-btn" id="helpBtn" data-i18n-aria="howTo">?</button>
+      <button class="icon-btn" id="progressBtn" data-i18n-aria="progress"><i data-icon="chart-line"></i></button>
+      <button class="icon-btn" id="nutriBtn" data-i18n-aria="nutriTitle"><i data-icon="tools-kitchen-2"></i></button>
+      <button class="icon-btn avatar-btn" id="profileBtn" data-i18n-aria="profile"><span id="avatarInitial"></span></button>
     </div>
   </header>
 
@@ -81,14 +74,6 @@
     <summary><span class="sum-t"><i data-icon="device-mobile"></i> <span data-i18n="installTitle"></span></span></summary>
     <p style="margin:0 0 8px" data-i18n="installLead"></p>
     <ul class="install-steps" data-i18n="installSteps"></ul>
-  </details>
-  <details class="info">
-    <summary data-i18n="warmTitle"></summary>
-    <ul data-i18n="warmList"></ul>
-  </details>
-  <details class="info">
-    <summary data-i18n="rulesTitle"></summary>
-    <ul data-i18n="rulesList"></ul>
   </details>
 
   <div class="tools">

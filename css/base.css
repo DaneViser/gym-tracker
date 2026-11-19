@@ -17,7 +17,8 @@ header.top { display: flex; align-items: center; justify-content: space-between;
 header.top .hello { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 0 1px; min-height: 19px; }
 header.top h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0; white-space: nowrap; }
 header.top h1 span { color: var(--accent); }
-header.top .btns { display: flex; gap: 6px; }
+header.top > div:first-child { min-width: 0; }
+header.top .btns { display: flex; gap: 6px; flex: none; }
 .icon-btn {
   background: var(--surface); border: 1px solid var(--line); color: var(--text);
   border-radius: 12px; height: 44px; min-width: 44px; font-size: 18px; padding: 0 10px; cursor: pointer;

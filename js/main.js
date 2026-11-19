@@ -9,7 +9,6 @@ import { openWelcome, init as initWelcome } from "./welcome.js";
 import { init as initProfile } from "./profile.js";
 import { init as initControls } from "./controls.js";
 import { checkAchievements, scheduleAchCheck, init as initAchievements } from "./achievements.js";
-import { init as initClock } from "./clock.js";
 import { protectStorage, init as initOffline } from "./offline.js";
 import { soundLog, init as initSound } from "./sound.js";
 import { init as initNutrition } from "./nutrition.js";
@@ -19,7 +18,7 @@ import { init as initWeight } from "./weight.js";
 loadState();
 
 // The same order the screens were wired up in before (matters for the Escape key handlers).
-initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initControls(); initAchievements(); initClock(); initOffline(); initSound(); initNutrition(); initLibrary(); initWeight();
+initRender(); initTimer(); initProgress(); initWelcome(); initProfile(); initControls(); initAchievements(); initOffline(); initSound(); initNutrition(); initLibrary(); initWeight();
 
 onSaved(scheduleAchCheck); // every saved change may unlock an achievement
 let warnedSave = false;     // tell the user (once) if the phone refuses to save

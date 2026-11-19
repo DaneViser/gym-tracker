@@ -41,7 +41,6 @@ A phone-first weekly gym tracker. Live at **https://daneviser.github.io/gym-trac
 | `week.css` | Week bar: navigation, progress bar, last-8-weeks squares. |
 | `workouts.css` | Workout cards, exercise rows, sets panel, edit mode, "+ Add workout". |
 | `progress.css` | Progress chart sheet. |
-| `clock.css` | Red LED gym clock in the header. |
 | `achievements.css` | Badge grid, medals, badge detail, targets chip + ⓘ tooltip, celebration pop-up. |
 | `profile.css` | Profile sheet, settings rows, personal records. |
 | `notices.css` | Backup reminder card, "new version" bar, toast. |
@@ -86,7 +85,6 @@ file to see its dependencies) and `export`s its own functions. Rules that keep t
 | `profile.js` | `computeStats()`, `renderProfile()`, name/language/theme settings, delete all. |
 | `controls.js` | `exportBackup()`, restore, backup reminder (`renderNag()`). |
 | `achievements.js` | `LIFTS` name matching, `LADDERS` (researched standards), `ACH` badge list, `ACH_VERSION`, `ACH_CATS`, metrics, badge sheet + detail, `celebrate()`, `checkPR()`. |
-| `clock.js` | Header clock. |
 | `calendar.js` | Training calendar in the profile (GitHub-style day grid), `sessionDay()` (real day via `doneAt`), `calendarDays()`. |
 | `weight.js` | Body weight log at the top of the calorie sheet: `addWeighIn()`, chart, `bwTrend()` (4-week slope), `bwAdvice()` (kcal change vs. the calculator goal). Newest weigh-in is copied to `profile.bw`. |
 | `nutrition.js` | Calorie calculator sheet; `calcNutrition()` = pure maths (Mifflin-St Jeor, job factor, workouts as MET, goal), sources in the file header. |
